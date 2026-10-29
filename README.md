@@ -1,194 +1,86 @@
-# IPTU · Central de preparação
+# IPTU — Central de preparação
 
-Aplicação Docker com painel em português para ler PDFs de um compartilhamento Windows, identificar páginas de requerimentos de isenção de IPTU e extrair conjuntos por processo. Preparada para GitHub + Coolify. O usuário publica o repositório; este projeto não cria nem publica recursos externos automaticamente.
+Aplicação de upload, identificação de formulários de isenção de IPTU, OCR e extração de dados em JSON. Interface azul e branca em português. Os dados ficam no próprio servidor. Não há conexão direta com compartilhamentos Windows nem configuração de usuário/senha de rede.
 
-## O que está implementado (v2)
+## Operação com pastas grandes, incluindo acervos de 36 GB
 
-- Configuração de servidor, compartilhamento, subpasta, domínio, usuário e senha pelo painel.
-- Acesso SMB 2/3 direto em modo leitura: não requer mount CIFS, `privileged` ou `SYS_ADMIN`.
-- Teste de acesso, inventário recursivo e lotes manuais de 1 a 500 processos.
-- Um processo corresponde à primeira pasta abaixo da origem. Todos os PDFs dessa pasta e suas subpastas são considerados juntos. PDFs soltos na raiz formam o grupo `_raiz`.
-- OCR leve em português para classificar início, continuação e encerramento, incluindo formulários de duas ou três páginas e páginas fora de ordem.
-- Aproveitamento do texto nativo; verificação de orientação com Tesseract.
-- Extração das páginas originais com PyMuPDF. Não rasteriza o PDF final nem mantém documentos pessoais de exemplo no código.
-- Reunião de páginas entre PDFs do mesmo processo. Múltiplas frentes/continuações/encerramentos são encaminhadas para revisão, sem deduplicação silenciosa.
-- Retomada após reinício; arquivos alterados voltam a pendentes após atualizar o inventário.
-- PDF, manifesto JSON de páginas/evidências e relatório CSV. Candidatas incertas são preservadas ao final do PDF para conferência.
-- Falhas de leitura de um arquivo não interrompem o lote; o processo passa para erro ou revisão.
-- Autenticação HTTP Basic; proteção CSRF; senha SMB criptografada em disco usando chave derivada de `APP_SECRET`.
+1. Clique em **Adicionar pasta inteira**. A seleção inclui recursivamente as subpastas. Repita para acrescentar outras pastas. Somente nomes terminados em `.pdf` ou `.PDF` entram na fila; os demais são ignorados antes da leitura e do envio.
+2. Confira a organização dos processos e o tamanho da rodada. O padrão é **5 PDFs por rodada**, enviados um por vez. Isso é independente do lote de processos para OCR.
+3. Clique em enviar. Um Worker calcula SHA-256 em blocos de 4 MiB no navegador. O servidor consulta os registros persistentes e solicita somente os conteúdos que ainda faltam. A conferência funciona em HTTP e HTTPS.
+4. A cada rodada, o servidor identifica e guarda as páginas candidatas a formulário e remove suas cópias dos PDFs completos. Quando todos os PDFs de um processo chegaram, libera esse processo para extração e, se marcado, OCR/JSON. Só então continua a próxima rodada.
+5. Confira os resultados, baixe os PDFs/JSONs e faça a revisão dos campos sugeridos.
 
-## Deploy no Coolify (Dockerfile)
+O limite padrão de uma seleção é **64 GiB**, até 20.000 PDFs, com **100 MiB por PDF**. Não é necessário enviar os 36 GB em uma única seleção: várias seleções menores usam o mesmo controle de conteúdo.
 
-1. Publique **o conteúdo desta pasta** na raiz de um repositório GitHub. Não publique dados de produção, `.env`, backups ou PDFs pessoais.
-2. No Coolify, crie uma aplicação a partir do repositório e escolha o build pack **Dockerfile**. Caminho: `/Dockerfile`. Porta interna: **8000**.
-3. Configure as variáveis **de execução**:
-   - `APP_SECRET`: segredo aleatório com ao menos 32 caracteres. Gere com `python3 -c "import secrets; print(secrets.token_urlsafe(48))"`.
-   - `ADMIN_USER`: por exemplo `admin`.
-   - `ADMIN_PASSWORD`: senha forte com ao menos 12 caracteres, diferente da senha SMB.
-   - `COOKIE_SECURE=true` para o domínio com HTTPS.
-4. Adicione armazenamento persistente em **`/data`**. Use volume gerenciado pelo Docker/Coolify. Se usar bind mount, a pasta precisa ser gravável por UID/GID **10001**.
-5. Configure domínio com HTTPS e health check **`/healthz`**. Faça o deploy. Execute **uma única réplica e um único processo Python**; não use Gunicorn com vários workers. A aplicação já inicia Waitress com um worker interno de extração e threads HTTP.
-6. Abra a aplicação e informe usuário/senha administrativa na janela de autenticação do navegador.
-7. Preencha a conexão Windows no painel, salve, teste o acesso e atualize o inventário. Comece com um lote de 3–10 processos.
+O navegador deve permanecer aberto e o computador acordado durante a conferência e o envio. Se a aba fechar, a rede cair ou o contêiner reiniciar, selecione novamente as mesmas pastas e envie. Os comprovantes de recebimento e o trabalho concluído permanecem no volume. A conferência pode reler os arquivos no computador, mas os PDFs reconhecidos não precisam ser transmitidos novamente. Um trabalho já iniciado no servidor continua após fechar a aba; novos envios dependem dela.
 
-**Guarde `APP_SECRET` com o backup.** Trocar a chave impede a leitura das credenciais SMB salvas. A criptografia protege o arquivo em repouso, mas não substitui controle de acesso ao servidor e aos backups. O volume contém PDFs e informações pessoais.
+### Identidade e retomada
 
-## Rede Windows
+- A identidade do PDF usa SHA-256 dos bytes, e não somente nome/tamanho/data. Conteúdos idênticos podem reutilizar preparação e OCR mesmo em seleções diferentes.
+- O processo é identificado pelo nome normalizado da pasta. Preserve os nomes das pastas de processo; processos distintos devem ter identificadores distintos.
+- Na seleção de uma raiz como `Isencao_IPTU`, cada pasta de processo abaixo dela agrupa os seus PDFs, inclusive anexos em níveis mais profundos. Pastas SEI como `3516200.410.00010907-2026-51` também são reconhecidas quando selecionadas diretamente.
+- PDFs avulsos são processos separados por nome. A opção de agrupamento permite tratar a pasta selecionada como um único processo.
+- Uploads parciais acrescentam documentos ao processo existente. Arquivos ausentes na nova seleção não são excluídos. Um conteúdo alterado no mesmo caminho produz uma nova versão do resultado; resultados e revisões anteriores são preservados no histórico.
+- PDFs visualmente iguais, mas com bytes diferentes, não são considerados duplicatas exatas.
 
-O servidor do Coolify precisa alcançar o Windows por **TCP 445**, normalmente pela rede privada ou VPN. Não exponha a porta SMB à internet. Se o Coolify estiver em uma VPS externa, configure a VPN/rota no host antes de testar o acesso. O painel configura o cliente SMB; ele não cria uma VPN.
+### Espaço e exclusão dos originais
 
-Para `\\192.168.1.20\Documentos\Isencao_IPTU`, preencha:
+A aplicação apaga **somente as suas cópias de upload** após guardar e verificar os fragmentos com as páginas candidatas. Não apaga arquivos do computador nem da pasta de rede escolhida pelo operador. PDFs com falha de preparação são preservados para tentativa posterior; a rodada avisa e pausa o envio.
 
-- Servidor: `192.168.1.20`
-- Compartilhamento: `Documentos`
-- Subpasta: `Isencao_IPTU`
-- Domínio: o domínio Windows, ou nome do servidor para uma conta local, quando necessário.
-- Usuário e senha: uma conta com leitura/listagem nas permissões **do compartilhamento e NTFS**.
+Permanecem no volume: formulários, OCRs, textos, JSONs, decisões por página, histórico e comprovantes SHA-256. Quando nenhum formulário é encontrado, permanecem os registros da análise. A classificação é um piloto e pode errar: mantenha os originais na origem para auditoria e eventual nova análise com outra versão do detector.
 
-Não informe `Z:` nem um caminho `C:\...`: letras de unidade pertencem à sessão Windows. Pode usar `DOMINIO\usuario` ou `usuario@dominio` no campo usuário; nesse caso deixe domínio vazio. Nomes de compartilhamento com espaços e acentos são aceitos. Acesso SMB usa a negociação segura do servidor; não há opção SMB1.
+O processamento em rodadas evita acumular todo o acervo original no servidor. Ainda é preciso dimensionar espaço para formulários, OCRs, histórico, temporários e arquivos com falha. A quantidade de PDFs por rodada limita o recebimento normal de originais, não o tamanho total dos resultados.
 
-## Operação e resultados
+## Publicar no Coolify
 
-1. **Salvar conexão:** senha em branco mantém a anterior. Alterar servidor/compartilhamento/subpasta desativa o inventário anterior; os resultados continuam no volume, mas deixam de aparecer no painel.
-2. **Testar acesso:** verifica listagem da pasta configurada. A permissão de leitura de cada PDF é verificada na extração.
-3. **Atualizar inventário:** varre os PDFs e calcula assinatura com caminho/tamanho/data de alteração, sem baixar o conteúdo. Uma alteração que preserve esses metadados exige reprocessamento manual. Falha de inventário preserva o inventário anterior. Não há agendamento automático nesta versão.
-4. **Iniciar lote:** processa até N pastas pendentes, sequencialmente. N é quantidade de processos, não de PDFs nem paralelismo. Cada PDF é copiado temporariamente para o disco local e removido ao concluir o processo. Reserve espaço para todos os PDFs do maior processo e para os resultados.
-5. **Interromper:** cancela na próxima verificação entre arquivos/páginas. Um OCR pode levar até 90 segundos no reconhecimento leve e 180 segundos por página no OCR completo antes da verificação; a listagem SMB em andamento precisa terminar/expirar. O processo interrompido volta a pendente, os concluídos são preservados.
-6. **Reprocessar:** recoloca o processo na fila. Depois inicie outro lote. O resultado atual é substituído na nova execução; versões com JSON/revisão são arquivadas em `history/`.
-7. **Downloads:** use PDF e Manifesto por processo ou CSV do inventário. Em `/data/results/<id>/` ficam `formulario.pdf` e `manifesto.json`; `/data/state.sqlite3` mantém configuração criptografada, inventário e estado. Faça backup consistente do volume, preferencialmente com a aplicação parada.
+Use Docker Compose com `compose.yaml` na raiz do repositório. Porta interna: **8000**. Configure as variáveis abaixo no Coolify **antes do build**, pois Compose exige seus valores durante a interpolação:
 
-As páginas registradas no manifesto começam em **1**, relativas ao PDF de origem. `file_index` começa em 0. `rotation` é a correção adicional de orientação. O texto completo do OCR preliminar não é salvo; o manifesto guarda expressões reconhecidas e origem.
+- `APP_SECRET`: segredo aleatório com pelo menos 32 caracteres. Gere com `python3 -c "import secrets; print(secrets.token_urlsafe(48))"`.
+- `ADMIN_USER`: padrão `admin`.
+- `ADMIN_PASSWORD`: senha do painel com pelo menos 12 caracteres.
+- `COOKIE_SECURE=true` para HTTPS. Para o teste em endereço HTTP, use `false` e faça novo deploy.
+- `UPLOAD_MAX_FILE_MB=100`, `UPLOAD_MAX_BATCH_MB=65536`, `UPLOAD_MAX_FILES=20000`: limites configuráveis; MB corresponde a 1024² bytes.
 
-### Situações
+Preserve o volume `iptu-data` montado em `/data` entre os deploys. Faça backup dele: a base SQLite e os caches desse volume são necessários para manter a retomada, as revisões e o reconhecimento de arquivos já recebidos. O aplicativo usa um único processo e uma fila serial; não crie réplicas concorrentes sobre esse mesmo volume.
 
-- `pendente`: aguarda lote.
-- `processando`: em execução.
-- `completo_provavel`: uma frente, uma continuação e um encerramento, em duas ou três páginas. **É uma hipótese por regras, não certificação de completude.**
-- `incompleto`: partes identificadas sem todos os papéis esperados.
-- `revisao`: múltiplos formulários, candidatos ambíguos ou falhas parciais.
-- `nao_encontrado`: nenhuma página atingiu os critérios; pode ser ausência ou falha de reconhecimento.
-- `erro`: falha impediu uma extração útil. Corrija a causa e recoloque na fila.
+Configure o proxy para aceitar pelo menos o limite por PDF mais a pequena margem multipart, por exemplo **110 MB** com o padrão atual. Cada requisição transmite um único PDF; o proxy não precisa aceitar 36 GB em uma requisição. Um erro HTTP 413 normalmente indica limite do proxy ou do aplicativo.
 
-O campo de estabilidade (padrão 120 segundos) impede copiar PDFs recém-alterados. Tamanho/data são conferidos antes e depois da cópia. Processos com arquivos ainda instáveis não são automaticamente aprovados.
+A atualização de uma instalação antiga remove as configurações Windows salvas. Resultados locais anteriores são preservados; uma nova extração exige upload. OCR dos formulários já retidos continua disponível.
 
-## Limites do piloto
+## Executar localmente
 
-O detector atual é baseado em expressões normalizadas e combinações de campos (`app/detector.py`), **não é um classificador visual treinado**. Não reconhece todas as variantes possíveis; manuscritos e digitalizações ruins podem falhar. Não há promessa de acurácia para 6.000 processos. Antes de produção, validar 50–100 processos variados, incluindo ausentes, formulários incompletos e múltiplas versões, medindo páginas perdidas e falsos positivos.
-
-O pré-processamento usa OCR leve; a etapa adicional de dados usa OCR completo e extração local por rótulos/geometria. `formulario.pdf` mantém as páginas originais e `formulario_ocr.pdf` é uma versão rasterizada pesquisável. `manifesto.json` continua descrevendo apenas a etapa de localização (`definitive_ocr=false`); a execução do OCR completo consta em `dados.json` e na situação de dados do painel. Não há reconhecimento confiável de manuscritos, validação de assinatura ou decisão automática sobre concessão da isenção.
-
-Processamento é sequencial para limitar CPU/memória. Um PDF com muitas páginas pode demorar; não existe limite fixo de páginas. Falhas e PDFs protegidos entram para revisão/erro. Páginas candidatas não são deduplicadas automaticamente. PDFs extraídos não preservam a validade de assinaturas digitais do documento de origem; conserve sempre os originais.
-
-## Executar localmente com Docker
-
-```bash
+```sh
 cp .env.example .env
-# Edite .env, configure segredos reais e COOKIE_SECURE=false apenas para localhost HTTP.
+# Edite os segredos e COOKIE_SECURE antes de iniciar.
 docker compose up --build -d
 ```
 
-Abra `http://localhost:8000`. No Coolify, prefira as variáveis do painel e o Dockerfile. `compose.yaml` é uma alternativa local.
+Abra `http://localhost:8000` e entre com as credenciais do painel. Para HTTP local, configure `COOKIE_SECURE=false`.
 
-## Desenvolvimento e testes
+Sem Docker, use Python 3.12+ com Tesseract 5 e os idiomas `por` e `eng` instalados:
 
-Requer Python 3.12+ e Tesseract com idiomas `por` e `osd` instalados. No macOS: `brew install tesseract tesseract-lang`.
-
-```bash
+```sh
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q
-# Defina APP_SECRET, ADMIN_PASSWORD e DATA_DIR antes de executar:
+export DATA_DIR=./data APP_SECRET='um-segredo-aleatorio-de-pelo-menos-32-caracteres'
+export ADMIN_USER=admin ADMIN_PASSWORD='uma-senha-forte-para-o-painel' COOKIE_SECURE=false
 python -m app
 ```
 
-Dependências Python usam faixas de versão para receber atualizações de correção. Para builds rigorosamente reproduzíveis em produção, gere e revise um lockfile após validar no seu ambiente.
+## Resultados e revisão
 
-Referências: [Coolify / Docker e configuração](https://coolify.io/docs/applications/how-applications-work), [armazenamento persistente](https://coolify.io/docs/applications/configuration/persistent-storage), [cliente smbprotocol](https://github.com/jborean93/smbprotocol).
+O detector usa texto existente e OCR de classificação para localizar frente, continuação e encerramento. Gera PDF somente com páginas candidatas e um manifesto com arquivo/página/SHA de origem. `Completo provável` ainda exige validação; `Não encontrado` exige amostragem. Os modelos de formulário variam e precisam ser validados com exemplos reais.
 
-### Conferir os exemplos locais
+A etapa de OCR completo oferece 300 ou 400 dpi e gera PDF pesquisável, texto e JSON com 63 campos. Campos incertos ficam vazios; marcações de opções são sugestões para revisão. A revisão humana fica separada da extração automática e registra alterações. O cache reaproveita OCR por formulário e por página, inclusive ao acrescentar documentos a um processo.
 
-Copie `tests/amostras.example.json` para um arquivo fora do repositório, ajuste os caminhos e as páginas esperadas (na ordem final) e execute:
+Há exportação em CSV e JSONL, downloads por processo e uma tela de revisão dos dados. Não há envio de dados a modelos externos. Os exemplos do repositório são fictícios.
 
-```bash
-python -m app.validate_samples /caminho/amostras.json
+## Verificação
+
+```sh
+python -m pytest -q
+node --test tests/*.test.cjs
 ```
 
-A rotina analisa todas as páginas, imprime o resultado de cada amostra e retorna código 1 se alguma seleção divergir. Não altera os PDFs nem envia dados a serviços externos. Preserve exemplos de diferentes modelos e acrescente processos sem formulário para medir falsos positivos.
-
-Validação nesta entrega: 17 testes automatizados aprovados (incluindo OCR/JSON/revisão); detector executado nas 35 páginas dos três PDFs fornecidos, selecionando as 7 páginas esperadas na ordem correta (2 + 2 + 3). Essa amostra pequena não mede acurácia do acervo. Interface conferida em largura móvel e desktop. Build Docker e conexão SMB real não executados neste Mac: Docker não está instalado e as credenciais/rede do servidor Windows não foram fornecidas. O workflow de GitHub executa os testes, build Docker e smoke test após publicação.
-
-
-## Extração estruturada para JSON
-
-No painel, a opção **Gerar OCR completo e JSON após extrair cada formulário** vem marcada. Via API de pré-processamento, use `extract_data=true`; o padrão da API continua sendo false para compatibilidade. A execução automática usa 300 dpi.
-
-Para formulários já extraídos, use **Gerar JSON dos próximos processos**: usa o tamanho do lote selecionado e a resolução 300/400 dpi, sem reconectar ao SMB. Processa somente os que ainda não têm JSON. Falhas podem ser tentadas novamente pelo mesmo botão. JSONs existentes e revisões não são sobrescritos por esse lote. **Reprocessar** na lista refaz o pré-processamento e arquiva os resultados anteriores em `results/<id>/history/` quando já há JSON/revisão, antes de refazer a extração. Esses arquivos ficam preservados no volume; a interface apresenta somente a versão atual.
-
-### Arquivos adicionais por processo
-
-- `dados.json`: resultado original do OCR, schema 2.0, preservado durante revisões humanas.
-- `dados.revisado.json`: versão atual com correções e histórico (quando houver).
-- `ocr.txt`: texto reconhecido de todas as páginas selecionadas, separado por quebra de página.
-- `formulario_ocr.pdf`: versão pesquisável produzida por Tesseract, separada do PDF de páginas originais.
-
-O JSON define **63 campos** agrupados em requerente, endereço, imóvel, benefícios, atividade, cônjuge, dependente e formulário. Isso é o catálogo de campos suportados para extração/revisão, **não uma garantia de extração automática de todos eles**. Campos sem reconhecimento permanecem null. O catálogo inclui observações para preenchimento manual; não há leitura automática confiável desse campo ou de manuscritos.
-
-A seção `dados` contém os valores normalizados para integração. A seção `campos` contém valor, situação, tipo, evidências, página original/extraída, coordenadas em pixels do OCR e confiança do texto. `resumo` registra preenchimento e conflitos. O schema de integração está em `app/schema.json` e pode ser obtido em `GET /api/schema.json` com autenticação.
-
-### Regras e limites
-
-- CPF: somente dígitos, com validação de tamanho e dígitos verificadores. Um CPF inválido fica null; a leitura bruta continua na evidência. CPF válido não confirma identidade.
-- Datas: formato ISO `AAAA-MM-DD`, validadas no calendário; datas ilegíveis ficam null.
-- Dinheiro: string decimal em reais (`"1621.00"`), sem arredondamentos de ponto flutuante. Ausência de centavos não é completada automaticamente.
-- CEP: oito dígitos; telefone: dez ou onze dígitos. Não há consulta externa.
-- E-mail: validação básica de formato; ausência explicitamente reconhecida pode ser `nao_aplicavel_declarado`.
-- Valores conflitantes: ficam null e recebem `conflito`; evidências são preservadas.
-- Campos textuais ainda podem conter erros de OCR. A confiança informada é da linha de texto, **não uma probabilidade calibrada de acerto do campo**.
-- Caixas de seleção: OpenCV detecta quadrados e densidade de marcação e associa palavras/perguntas próximas. Essas associações são experimentais: aparecem em `sugestoes` e na tela de revisão, sem preencher automaticamente o valor definitivo do campo. Uma caixa vazia nunca vira resposta “não”.
-- Todos os dados começam com `revisao_necessaria`. Não usar para deferir/indeferir pedidos sem revisão competente.
-
-### Conferência humana
-
-Clique em **N campos · revisar** na linha do processo. A página original fica ao lado dos valores e evidências. Você pode editar um valor, usar uma sugestão após conferir ou confirmar um campo vazio. Somente campos alterados ou marcados como conferidos são salvos; os demais continuam pendentes.
-
-O histórico registra usuário administrativo, data e alterações. Até todos os campos serem conferidos o documento permanece `revisao_parcial`; ao conferir todos, passa a `revisado`. Esse controle indica revisão dos campos no aplicativo, não validação jurídica do requerimento. O download **JSON** devolve a versão revisada mais recente, quando existir. **JSON original do OCR** permanece disponível na revisão.
-
-**Exportar todos os JSONs** gera JSONL, um documento por linha, com a versão mais recente de cada processo que tiver dados. Registros revisados e não revisados podem coexistir: consumidores precisam verificar `status` e `revisao_humana`.
-
-### API (mesma autenticação e CSRF do painel)
-
-- `POST /api/ocr` com `{"limit":10,"dpi":300}` inicia o OCR de formulários já extraídos. `process_id` opcional restringe a um processo; JSON existente não é refeito.
-- `GET /api/data/<id>` lê os dados atuais.
-- `POST /api/data/<id>/review` com `{"changes":{"requerente.nome":"NOME CONFERIDO"}}` salva correções. Texto ou null; datas e valores precisam estar normalizados. Não enviar campos desconhecidos.
-- `GET /api/export.jsonl` exporta as versões atuais.
-- `GET /results/<id>/dados`, `/bruto`, `/txt` e `/ocr` baixam JSON atual, JSON original, texto e PDF pesquisável.
-- `GET /api/page/<id>/<n>.png` mostra a página extraída para revisão. Páginas começam em 1.
-
-A execução é inteiramente local. Nenhum PDF, imagem ou dado é enviado a APIs de IA. Não há custo por página de serviços externos. Recomenda-se começar com 2 CPUs e 4 GB RAM, ajustando após medir os PDFs reais; o processamento segue sequencial. O campo de resolução refere-se à rasterização: não recupera detalhes ausentes em imagens de baixa resolução.
-
-A nova etapa foi testada também nas sete imagens de conferência dos três exemplos (resolução reduzida, pois o disco externo estava desconectado). Esses testes verificam execução e geração de artefatos; **não comprovam a exatidão de todos os valores extraídos**. Validar em PDFs originais e em uma amostra rotulada antes de ampliar o lote.
-
-Exemplo completo com dados fictícios: `examples/dados-ficticios.json`. Ele demonstra o formato e valores null; não é um formulário de produção.
-
-
-## Erro de sessão em endereço HTTP
-
-Se o painel abrir em `http://...` com `COOKIE_SECURE=true`, o navegador não envia o cookie de sessão e as ações POST são bloqueadas antes da conexão SMB. O painel agora informa esse caso e as APIs distinguem autenticação do painel (401) de sessão/CSRF (403).
-
-Para um teste em HTTP, defina `COOKIE_SECURE=false` no Coolify, salve e faça novo deploy. Depois recarregue a página. Para uso com HTTPS, mantenha `COOKIE_SECURE=true`. A aplicação não reduz essa proteção automaticamente. Não troque `APP_SECRET` para resolver esse erro.
-
-Exemplo de conexão para `\\servidor\Informatica\Arquivos\Isencao_IPTU`: servidor `servidor` (ou IP), compartilhamento `Informatica`, subpasta `Arquivos/Isencao_IPTU`. Não cole o caminho UNC completo no campo Servidor ou IP.
-
-
-## Diagnóstico de conexão SMB
-
-O botão Testar acesso agora mostra as etapas separadas: (1) resolução/conexão TCP 445 a partir do contêiner, (2) negociação SMB/autenticação e (3) compartilhamento/subpasta/permissão de listagem. As falhas exibem código próprio, como `tcp445_timeout`, `network_unreachable`, `smb_auth_failed`, `smb_share_not_found` ou `smb_access_denied`. Logs de falhas incluem operação/código/classe da exceção, sem imprimir senha ou mensagem bruta da biblioteca.
-
-Se o Windows tem IP privado, o host do Coolify precisa estar na mesma rede ou ter VPN/rota. Confirme também se a rede Docker não se sobrepõe à rede interna Windows. Porta 445 acessível não comprova que a conta/pasta está autorizada; as etapas seguintes verificam isso.
-
-## Lembrar o formulário de conexão
-
-Além da configuração salva de forma criptografada no servidor, o navegador lembra os campos não secretos enquanto você digita: servidor, compartilhamento, subpasta, domínio, usuário e tempo de estabilidade. Isso permite retomar um preenchimento ainda não salvo. **A senha nunca é incluída no armazenamento do navegador.**
-
-Um link `/#conexao?server=SERVIDOR&share=PASTA&subpath=SUBPASTA&domain=DOMINIO` pode preencher os campos de conexão. O perfil é aplicado após carregar a configuração salva, mantém o usuário existente e remove os parâmetros do endereço. Ele não salva senha nem inicia autenticação automaticamente: confira o usuário, informe a senha e clique em Salvar conexão. Valores de rede específicos da instituição não precisam ficar no código público do repositório.
+Os testes cobrem upload recursivo lógico, rejeição de caminhos e conteúdos inválidos, autenticação/CSRF, retomada, reutilização por conteúdo, descarte seguro de cópias, preparação antes do término da seleção, extração/revisão e vetores SHA-256. O limite de 36 GiB é verificado por manifesto; os testes não transferem um acervo real desse tamanho.

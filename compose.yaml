@@ -8,6 +8,9 @@ services:
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Defina ADMIN_PASSWORD}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      UPLOAD_MAX_FILE_MB: ${UPLOAD_MAX_FILE_MB:-100}
+      UPLOAD_MAX_BATCH_MB: ${UPLOAD_MAX_BATCH_MB:-65536}
+      UPLOAD_MAX_FILES: ${UPLOAD_MAX_FILES:-20000}
     volumes:
       - iptu-data:/data
     restart: unless-stopped

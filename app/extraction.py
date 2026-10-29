@@ -402,7 +402,7 @@ def summarize(document):
     return document
 
 
-def extract_form(pdf_path,manifest,output,dpi=300,cancelled=lambda:False,progress=lambda n,total:None):
+def extract_form(pdf_path,manifest,output,dpi=300,cancelled=lambda:False,progress=lambda n,total:None,page_cache=None):
     result=empty_document(manifest['process'],manifest)
     result.update(resolucao_dpi=dpi,versao_extrator='labels-v2-pilot')
     ocr_pages=[]; texts=[]
@@ -411,8 +411,11 @@ def extract_form(pdf_path,manifest,output,dpi=300,cancelled=lambda:False,progres
             if cancelled():
                 raise InterruptedError()
             progress(i+1,len(original))
-            ocr=ocr_page(page,Path(temp),i,dpi)
             origin=manifest.get('selected',[])[i] if i<len(manifest.get('selected',[])) else {}
+            ocr=page_cache.get_page_ocr(origin,dpi) if page_cache else None
+            if ocr is None:
+                ocr=ocr_page(page,Path(temp),i,dpi)
+                if page_cache:page_cache.store_page_ocr(origin,dpi,ocr)
             parse_page(result,ocr,i+1,origin)
             result['paginas'].append(dict(pagina=i+1,origem=origin,largura=ocr['width'],altura=ocr['height'],
                 palavras=len(ocr['words']),caixas_detectadas=len(ocr['boxes'])))
