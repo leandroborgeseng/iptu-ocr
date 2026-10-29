@@ -1,0 +1,943 @@
+{
+  "schema_version": "2.0",
+  "processo": "DEMONSTRACAO - DADOS FICTICIOS",
+  "gerado_em": "2026-10-28T19:53:56.294681+00:00",
+  "motor": "tesseract-por-local",
+  "revisao_humana": false,
+  "status": "revisao_necessaria",
+  "avisos": [
+    "Dados preliminares. Não utilizar para decidir concessão de isenção sem conferência.",
+    "Confiança do OCR não é probabilidade de o campo estar correto."
+  ],
+  "origem_preprocessamento": "completo_provavel",
+  "campos": {
+    "requerente.nome": {
+      "rotulo": "Nome",
+      "tipo": "text",
+      "valor": "ANA EXEMPLO",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.963,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Nome: ANA EXEMPLO",
+          "confianca_ocr": 0.963,
+          "bbox": [
+            128,
+            469,
+            556,
+            501
+          ],
+          "texto": "ANA EXEMPLO",
+          "valor_candidato": "ANA EXEMPLO",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "requerente.rg": {
+      "rotulo": "RG",
+      "tipo": "text",
+      "valor": "123456",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.918,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "RG: 123456 CIN/CPF: 111.444.777-35",
+          "confianca_ocr": 0.918,
+          "bbox": [
+            129,
+            636,
+            841,
+            668
+          ],
+          "texto": "123456",
+          "valor_candidato": "123456",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "requerente.cpf": {
+      "rotulo": "CPF",
+      "tipo": "cpf",
+      "valor": "11144477735",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.918,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "RG: 123456 CIN/CPF: 111.444.777-35",
+          "confianca_ocr": 0.918,
+          "bbox": [
+            129,
+            636,
+            841,
+            668
+          ],
+          "texto": "111.444.777-35",
+          "valor_candidato": "11144477735",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "requerente.data_nascimento": {
+      "rotulo": "Data de nascimento",
+      "tipo": "date",
+      "valor": "1955-11-22",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.945,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Data de Nascimento: 22/11/1955 Tel/Cel: 16999999999",
+          "confianca_ocr": 0.945,
+          "bbox": [
+            129,
+            802,
+            1154,
+            834
+          ],
+          "texto": "22/11/1955",
+          "valor_candidato": "1955-11-22",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "requerente.telefone": {
+      "rotulo": "Telefone",
+      "tipo": "phone",
+      "valor": "16999999999",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.945,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Data de Nascimento: 22/11/1955 Tel/Cel: 16999999999",
+          "confianca_ocr": 0.945,
+          "bbox": [
+            129,
+            802,
+            1154,
+            834
+          ],
+          "texto": "16999999999",
+          "valor_candidato": "16999999999",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "requerente.email": {
+      "rotulo": "E-mail",
+      "tipo": "email",
+      "valor": null,
+      "status": "email_invalido",
+      "confianca_ocr": null,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "E-mail: exemploDexample.com",
+          "confianca_ocr": 0.675,
+          "bbox": [
+            129,
+            1469,
+            711,
+            1509
+          ],
+          "texto": "exemploDexample.com",
+          "valor_candidato": null,
+          "validacao": "email_invalido"
+        }
+      ]
+    },
+    "requerente.estado_civil": {
+      "rotulo": "Estado civil",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "requerente.primeira_isencao": {
+      "rotulo": "Primeira isenção",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "requerente.pessoa_com_deficiencia": {
+      "rotulo": "Pessoa com deficiência",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "endereco.logradouro": {
+      "rotulo": "Logradouro",
+      "tipo": "text",
+      "valor": "RUA DEMONSTRACAO",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.915,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Endereco: RUA DEMONSTRACAO",
+          "confianca_ocr": 0.915,
+          "bbox": [
+            129,
+            969,
+            781,
+            1001
+          ],
+          "texto": "RUA DEMONSTRACAO",
+          "valor_candidato": "RUA DEMONSTRACAO",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "endereco.numero": {
+      "rotulo": "Número",
+      "tipo": "text",
+      "valor": "100",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.957,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "N: 100 Complemento: CASA",
+          "confianca_ocr": 0.957,
+          "bbox": [
+            128,
+            1136,
+            655,
+            1176
+          ],
+          "texto": "100",
+          "valor_candidato": "100",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "endereco.complemento": {
+      "rotulo": "Complemento",
+      "tipo": "text",
+      "valor": "CASA",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.957,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "N: 100 Complemento: CASA",
+          "confianca_ocr": 0.957,
+          "bbox": [
+            128,
+            1136,
+            655,
+            1176
+          ],
+          "texto": "CASA",
+          "valor_candidato": "CASA",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "endereco.bairro": {
+      "rotulo": "Bairro",
+      "tipo": "text",
+      "valor": "CENTRO",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.96,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Bairro: CENTRO CEP: 14400-000",
+          "confianca_ocr": 0.96,
+          "bbox": [
+            128,
+            1302,
+            753,
+            1334
+          ],
+          "texto": "CENTRO",
+          "valor_candidato": "CENTRO",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "endereco.cep": {
+      "rotulo": "CEP",
+      "tipo": "cep",
+      "valor": "14400000",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.96,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Bairro: CENTRO CEP: 14400-000",
+          "confianca_ocr": 0.96,
+          "bbox": [
+            128,
+            1302,
+            753,
+            1334
+          ],
+          "texto": "14400-000",
+          "valor_candidato": "14400000",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "imovel.cadastro": {
+      "rotulo": "Cadastro do imóvel",
+      "tipo": "text",
+      "valor": "01.02.03.004.00.00",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.937,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "N Cadastro do Imovel: 01.02.03.004.00.00",
+          "confianca_ocr": 0.937,
+          "bbox": [
+            128,
+            1969,
+            908,
+            2001
+          ],
+          "texto": "01.02.03.004.00.00",
+          "valor_candidato": "01.02.03.004.00.00",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "imovel.tipo": {
+      "rotulo": "Tipo do imóvel",
+      "tipo": "text",
+      "valor": "RESIDENCIAL",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.964,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Tipo do Imovel: RESIDENCIAL",
+          "confianca_ocr": 0.964,
+          "bbox": [
+            126,
+            1636,
+            698,
+            1676
+          ],
+          "texto": "RESIDENCIAL",
+          "valor_candidato": "RESIDENCIAL",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "imovel.tipo_escritura": {
+      "rotulo": "Tipo de escritura",
+      "tipo": "text",
+      "valor": "MATRICULA",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.963,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "Tipo de Escritura: MATRICULA",
+          "confianca_ocr": 0.963,
+          "bbox": [
+            126,
+            1802,
+            703,
+            1842
+          ],
+          "texto": "MATRICULA",
+          "valor_candidato": "MATRICULA",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "imovel.usufrutuario": {
+      "rotulo": "Usufrutuário",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.reside_no_imovel": {
+      "rotulo": "Beneficiário reside no imóvel",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.ponto_comercial": {
+      "rotulo": "Ponto comercial",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.possui_edicula": {
+      "rotulo": "Possui edícula",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.edicula_habitada": {
+      "rotulo": "Edícula habitada",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.edicula_alugada": {
+      "rotulo": "Edícula alugada",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.aluguel_edicula": {
+      "rotulo": "Valor do aluguel da edícula",
+      "tipo": "money",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.residente_edicula": {
+      "rotulo": "Nome do residente da edícula",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.rg_residente_edicula": {
+      "rotulo": "RG do residente da edícula",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.cpf_residente_edicula": {
+      "rotulo": "CPF do residente da edícula",
+      "tipo": "cpf",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.possui_outro": {
+      "rotulo": "Possui outro imóvel",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "imovel.cadastro_outro": {
+      "rotulo": "Cadastro de outro imóvel",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.recebe": {
+      "rotulo": "Recebe benefício",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.tipo": {
+      "rotulo": "Tipo de benefício",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.aposentado": {
+      "rotulo": "É aposentado",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.aposentadoria_numero": {
+      "rotulo": "Número da aposentadoria/benefício",
+      "tipo": "text",
+      "valor": "123456789",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.936,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "E Aposentado? Sim N Beneficio: 123456789 Valor: 1621,00",
+          "confianca_ocr": 0.936,
+          "bbox": [
+            129,
+            2136,
+            1230,
+            2176
+          ],
+          "texto": "123456789",
+          "valor_candidato": "123456789",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "beneficios.aposentadoria_valor": {
+      "rotulo": "Valor da aposentadoria/benefício",
+      "tipo": "money",
+      "valor": "1621.00",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.936,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "E Aposentado? Sim N Beneficio: 123456789 Valor: 1621,00",
+          "confianca_ocr": 0.936,
+          "bbox": [
+            129,
+            2136,
+            1230,
+            2176
+          ],
+          "texto": "1621,00",
+          "valor_candidato": "1621.00",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "beneficios.aposentadoria_orgao": {
+      "rotulo": "Órgão do benefício",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.pensionista": {
+      "rotulo": "É pensionista",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.pensao_numero": {
+      "rotulo": "Número da pensão",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.pensao_valor": {
+      "rotulo": "Valor da pensão",
+      "tipo": "money",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.pensao_orgao": {
+      "rotulo": "Órgão da pensão",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.pensao_data": {
+      "rotulo": "Data de concessão da pensão",
+      "tipo": "date",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "beneficios.outras_rendas": {
+      "rotulo": "Possui outras fontes de renda",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "atividade.socio_empresa": {
+      "rotulo": "Sócio de empresa",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "atividade.autonomo": {
+      "rotulo": "Trabalha como autônomo",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "atividade.registrado": {
+      "rotulo": "Trabalha registrado",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.nome": {
+      "rotulo": "Nome do cônjuge/companheiro",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.rg": {
+      "rotulo": "RG do cônjuge/companheiro",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.cpf": {
+      "rotulo": "CPF do cônjuge/companheiro",
+      "tipo": "cpf",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.beneficiario": {
+      "rotulo": "Cônjuge aposentado/pensionista/BPC",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.beneficio_numero": {
+      "rotulo": "Número do benefício do cônjuge",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.beneficio_valor": {
+      "rotulo": "Valor do benefício do cônjuge",
+      "tipo": "money",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.socio_empresa": {
+      "rotulo": "Cônjuge sócio de empresa",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.outras_rendas": {
+      "rotulo": "Cônjuge possui outras rendas",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "conjuge.possui_outro_imovel": {
+      "rotulo": "Cônjuge possui outro imóvel",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.possui_deficiencia": {
+      "rotulo": "Tem dependente com deficiência",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.nome": {
+      "rotulo": "Nome do dependente",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.parentesco": {
+      "rotulo": "Parentesco",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.rg": {
+      "rotulo": "RG do dependente",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.cpf": {
+      "rotulo": "CPF do dependente",
+      "tipo": "cpf",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.beneficiario": {
+      "rotulo": "Dependente beneficiário BPC",
+      "tipo": "choice",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "dependente.beneficio_numero": {
+      "rotulo": "Número do benefício do dependente",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "formulario.exercicio": {
+      "rotulo": "Exercício do IPTU",
+      "tipo": "year",
+      "valor": "2027",
+      "status": "extraido_nao_revisado",
+      "confianca_ocr": 0.938,
+      "evidencias": [
+        {
+          "pagina_extraida": 1,
+          "origem": {
+            "source": "exemplo-ficticio.pdf",
+            "page": 1
+          },
+          "linha": "REQUERIMENTO DE ISENCAO DE IPTU 2027",
+          "confianca_ocr": 0.938,
+          "bbox": [
+            129,
+            302,
+            1013,
+            335
+          ],
+          "texto": "2027",
+          "valor_candidato": "2027",
+          "validacao": "formato_valido"
+        }
+      ]
+    },
+    "formulario.numero_processo": {
+      "rotulo": "Número do processo no formulário",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    },
+    "formulario.observacoes": {
+      "rotulo": "Observações (revisão manual)",
+      "tipo": "text",
+      "valor": null,
+      "status": "nao_identificado",
+      "confianca_ocr": null,
+      "evidencias": []
+    }
+  },
+  "dados": {
+    "requerente": {
+      "nome": "ANA EXEMPLO",
+      "rg": "123456",
+      "cpf": "11144477735",
+      "data_nascimento": "1955-11-22",
+      "telefone": "16999999999",
+      "email": null,
+      "estado_civil": null,
+      "primeira_isencao": null,
+      "pessoa_com_deficiencia": null
+    },
+    "endereco": {
+      "logradouro": "RUA DEMONSTRACAO",
+      "numero": "100",
+      "complemento": "CASA",
+      "bairro": "CENTRO",
+      "cep": "14400000"
+    },
+    "imovel": {
+      "cadastro": "01.02.03.004.00.00",
+      "tipo": "RESIDENCIAL",
+      "tipo_escritura": "MATRICULA",
+      "usufrutuario": null,
+      "reside_no_imovel": null,
+      "ponto_comercial": null,
+      "possui_edicula": null,
+      "edicula_habitada": null,
+      "edicula_alugada": null,
+      "aluguel_edicula": null,
+      "residente_edicula": null,
+      "rg_residente_edicula": null,
+      "cpf_residente_edicula": null,
+      "possui_outro": null,
+      "cadastro_outro": null
+    },
+    "beneficios": {
+      "recebe": null,
+      "tipo": null,
+      "aposentado": null,
+      "aposentadoria_numero": "123456789",
+      "aposentadoria_valor": "1621.00",
+      "aposentadoria_orgao": null,
+      "pensionista": null,
+      "pensao_numero": null,
+      "pensao_valor": null,
+      "pensao_orgao": null,
+      "pensao_data": null,
+      "outras_rendas": null
+    },
+    "atividade": {
+      "socio_empresa": null,
+      "autonomo": null,
+      "registrado": null
+    },
+    "conjuge": {
+      "nome": null,
+      "rg": null,
+      "cpf": null,
+      "beneficiario": null,
+      "beneficio_numero": null,
+      "beneficio_valor": null,
+      "socio_empresa": null,
+      "outras_rendas": null,
+      "possui_outro_imovel": null
+    },
+    "dependente": {
+      "possui_deficiencia": null,
+      "nome": null,
+      "parentesco": null,
+      "rg": null,
+      "cpf": null,
+      "beneficiario": null,
+      "beneficio_numero": null
+    },
+    "formulario": {
+      "exercicio": "2027",
+      "numero_processo": null,
+      "observacoes": null
+    }
+  },
+  "paginas": [
+    {
+      "pagina": 1,
+      "origem": {
+        "source": "exemplo-ficticio.pdf",
+        "page": 1
+      },
+      "largura": 2480,
+      "altura": 3509,
+      "palavras": 57,
+      "caixas_detectadas": 4
+    }
+  ],
+  "resumo": {
+    "total_campos": 63,
+    "preenchidos": 16,
+    "nao_identificados": 46,
+    "com_sugestoes": 0,
+    "conflitos": 0
+  }
+}

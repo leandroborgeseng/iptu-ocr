@@ -1,0 +1,16 @@
+services:
+  iptu:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_SECRET: ${APP_SECRET:?Defina APP_SECRET}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Defina ADMIN_PASSWORD}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    volumes:
+      - iptu-data:/data
+    restart: unless-stopped
+    stop_grace_period: 30s
+volumes:
+  iptu-data:

@@ -1,0 +1,24 @@
+name: Tests and Docker build
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - run: docker build -t iptu-extrator:test .
+      - name: Smoke test container
+        run: |
+          docker run -d --name iptu -p 8000:8000 -e APP_SECRET=ci-only-secret-with-at-least-32-characters -e ADMIN_PASSWORD=ci-only-password-123 iptu-extrator:test
+          for attempt in $(seq 1 30); do
+            if curl --fail http://localhost:8000/healthz; then exit 0; fi
+            sleep 2
+          done
+          docker logs iptu
+          exit 1

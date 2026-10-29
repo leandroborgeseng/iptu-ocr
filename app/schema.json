@@ -1,0 +1,2209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dados de formulário IPTU v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "processo",
+    "campos",
+    "dados",
+    "status",
+    "revisao_humana"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "processo": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "revisao_necessaria",
+        "revisao_parcial",
+        "revisado"
+      ]
+    },
+    "revisao_humana": {
+      "type": "boolean"
+    },
+    "dados": {
+      "type": "object",
+      "properties": {
+        "requerente": {
+          "type": "object",
+          "properties": {
+            "nome": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Nome"
+            },
+            "rg": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "RG"
+            },
+            "cpf": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "CPF",
+              "pattern": "^\\d{11}$"
+            },
+            "data_nascimento": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Data de nascimento",
+              "format": "date"
+            },
+            "telefone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Telefone"
+            },
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "E-mail"
+            },
+            "estado_civil": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Estado civil"
+            },
+            "primeira_isencao": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Primeira isenção"
+            },
+            "pessoa_com_deficiencia": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Pessoa com deficiência"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "nome",
+            "rg",
+            "cpf",
+            "data_nascimento",
+            "telefone",
+            "email",
+            "estado_civil",
+            "primeira_isencao",
+            "pessoa_com_deficiencia"
+          ]
+        },
+        "endereco": {
+          "type": "object",
+          "properties": {
+            "logradouro": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Logradouro"
+            },
+            "numero": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Número"
+            },
+            "complemento": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Complemento"
+            },
+            "bairro": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Bairro"
+            },
+            "cep": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "CEP",
+              "pattern": "^\\d{8}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "logradouro",
+            "numero",
+            "complemento",
+            "bairro",
+            "cep"
+          ]
+        },
+        "imovel": {
+          "type": "object",
+          "properties": {
+            "cadastro": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Cadastro do imóvel"
+            },
+            "tipo": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Tipo do imóvel"
+            },
+            "tipo_escritura": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Tipo de escritura"
+            },
+            "usufrutuario": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Usufrutuário"
+            },
+            "reside_no_imovel": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Beneficiário reside no imóvel"
+            },
+            "ponto_comercial": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Ponto comercial"
+            },
+            "possui_edicula": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Possui edícula"
+            },
+            "edicula_habitada": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Edícula habitada"
+            },
+            "edicula_alugada": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Edícula alugada"
+            },
+            "aluguel_edicula": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Valor do aluguel da edícula",
+              "pattern": "^\\d+\\.\\d{2}$"
+            },
+            "residente_edicula": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Nome do residente da edícula"
+            },
+            "rg_residente_edicula": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "RG do residente da edícula"
+            },
+            "cpf_residente_edicula": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "CPF do residente da edícula",
+              "pattern": "^\\d{11}$"
+            },
+            "possui_outro": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Possui outro imóvel"
+            },
+            "cadastro_outro": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Cadastro de outro imóvel"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "cadastro",
+            "tipo",
+            "tipo_escritura",
+            "usufrutuario",
+            "reside_no_imovel",
+            "ponto_comercial",
+            "possui_edicula",
+            "edicula_habitada",
+            "edicula_alugada",
+            "aluguel_edicula",
+            "residente_edicula",
+            "rg_residente_edicula",
+            "cpf_residente_edicula",
+            "possui_outro",
+            "cadastro_outro"
+          ]
+        },
+        "beneficios": {
+          "type": "object",
+          "properties": {
+            "recebe": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Recebe benefício"
+            },
+            "tipo": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Tipo de benefício"
+            },
+            "aposentado": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "É aposentado"
+            },
+            "aposentadoria_numero": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Número da aposentadoria/benefício"
+            },
+            "aposentadoria_valor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Valor da aposentadoria/benefício",
+              "pattern": "^\\d+\\.\\d{2}$"
+            },
+            "aposentadoria_orgao": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Órgão do benefício"
+            },
+            "pensionista": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "É pensionista"
+            },
+            "pensao_numero": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Número da pensão"
+            },
+            "pensao_valor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Valor da pensão",
+              "pattern": "^\\d+\\.\\d{2}$"
+            },
+            "pensao_orgao": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Órgão da pensão"
+            },
+            "pensao_data": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Data de concessão da pensão",
+              "format": "date"
+            },
+            "outras_rendas": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Possui outras fontes de renda"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "recebe",
+            "tipo",
+            "aposentado",
+            "aposentadoria_numero",
+            "aposentadoria_valor",
+            "aposentadoria_orgao",
+            "pensionista",
+            "pensao_numero",
+            "pensao_valor",
+            "pensao_orgao",
+            "pensao_data",
+            "outras_rendas"
+          ]
+        },
+        "atividade": {
+          "type": "object",
+          "properties": {
+            "socio_empresa": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Sócio de empresa"
+            },
+            "autonomo": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Trabalha como autônomo"
+            },
+            "registrado": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Trabalha registrado"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "socio_empresa",
+            "autonomo",
+            "registrado"
+          ]
+        },
+        "conjuge": {
+          "type": "object",
+          "properties": {
+            "nome": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Nome do cônjuge/companheiro"
+            },
+            "rg": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "RG do cônjuge/companheiro"
+            },
+            "cpf": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "CPF do cônjuge/companheiro",
+              "pattern": "^\\d{11}$"
+            },
+            "beneficiario": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Cônjuge aposentado/pensionista/BPC"
+            },
+            "beneficio_numero": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Número do benefício do cônjuge"
+            },
+            "beneficio_valor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Valor do benefício do cônjuge",
+              "pattern": "^\\d+\\.\\d{2}$"
+            },
+            "socio_empresa": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Cônjuge sócio de empresa"
+            },
+            "outras_rendas": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Cônjuge possui outras rendas"
+            },
+            "possui_outro_imovel": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Cônjuge possui outro imóvel"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "nome",
+            "rg",
+            "cpf",
+            "beneficiario",
+            "beneficio_numero",
+            "beneficio_valor",
+            "socio_empresa",
+            "outras_rendas",
+            "possui_outro_imovel"
+          ]
+        },
+        "dependente": {
+          "type": "object",
+          "properties": {
+            "possui_deficiencia": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Tem dependente com deficiência"
+            },
+            "nome": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Nome do dependente"
+            },
+            "parentesco": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Parentesco"
+            },
+            "rg": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "RG do dependente"
+            },
+            "cpf": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "CPF do dependente",
+              "pattern": "^\\d{11}$"
+            },
+            "beneficiario": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Dependente beneficiário BPC"
+            },
+            "beneficio_numero": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Número do benefício do dependente"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "possui_deficiencia",
+            "nome",
+            "parentesco",
+            "rg",
+            "cpf",
+            "beneficiario",
+            "beneficio_numero"
+          ]
+        },
+        "formulario": {
+          "type": "object",
+          "properties": {
+            "exercicio": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Exercício do IPTU"
+            },
+            "numero_processo": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Número do processo no formulário"
+            },
+            "observacoes": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "title": "Observações (revisão manual)"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "exercicio",
+            "numero_processo",
+            "observacoes"
+          ]
+        }
+      },
+      "required": [
+        "requerente",
+        "endereco",
+        "imovel",
+        "beneficios",
+        "atividade",
+        "conjuge",
+        "dependente",
+        "formulario"
+      ],
+      "additionalProperties": false
+    },
+    "campos": {
+      "type": "object",
+      "required": [
+        "requerente.nome",
+        "requerente.rg",
+        "requerente.cpf",
+        "requerente.data_nascimento",
+        "requerente.telefone",
+        "requerente.email",
+        "requerente.estado_civil",
+        "requerente.primeira_isencao",
+        "requerente.pessoa_com_deficiencia",
+        "endereco.logradouro",
+        "endereco.numero",
+        "endereco.complemento",
+        "endereco.bairro",
+        "endereco.cep",
+        "imovel.cadastro",
+        "imovel.tipo",
+        "imovel.tipo_escritura",
+        "imovel.usufrutuario",
+        "imovel.reside_no_imovel",
+        "imovel.ponto_comercial",
+        "imovel.possui_edicula",
+        "imovel.edicula_habitada",
+        "imovel.edicula_alugada",
+        "imovel.aluguel_edicula",
+        "imovel.residente_edicula",
+        "imovel.rg_residente_edicula",
+        "imovel.cpf_residente_edicula",
+        "imovel.possui_outro",
+        "imovel.cadastro_outro",
+        "beneficios.recebe",
+        "beneficios.tipo",
+        "beneficios.aposentado",
+        "beneficios.aposentadoria_numero",
+        "beneficios.aposentadoria_valor",
+        "beneficios.aposentadoria_orgao",
+        "beneficios.pensionista",
+        "beneficios.pensao_numero",
+        "beneficios.pensao_valor",
+        "beneficios.pensao_orgao",
+        "beneficios.pensao_data",
+        "beneficios.outras_rendas",
+        "atividade.socio_empresa",
+        "atividade.autonomo",
+        "atividade.registrado",
+        "conjuge.nome",
+        "conjuge.rg",
+        "conjuge.cpf",
+        "conjuge.beneficiario",
+        "conjuge.beneficio_numero",
+        "conjuge.beneficio_valor",
+        "conjuge.socio_empresa",
+        "conjuge.outras_rendas",
+        "conjuge.possui_outro_imovel",
+        "dependente.possui_deficiencia",
+        "dependente.nome",
+        "dependente.parentesco",
+        "dependente.rg",
+        "dependente.cpf",
+        "dependente.beneficiario",
+        "dependente.beneficio_numero",
+        "formulario.exercicio",
+        "formulario.numero_processo",
+        "formulario.observacoes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "requerente.nome": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.rg": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.cpf": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.data_nascimento": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.telefone": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.email": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.estado_civil": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.primeira_isencao": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "requerente.pessoa_com_deficiencia": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "endereco.logradouro": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "endereco.numero": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "endereco.complemento": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "endereco.bairro": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "endereco.cep": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.cadastro": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.tipo": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.tipo_escritura": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.usufrutuario": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.reside_no_imovel": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.ponto_comercial": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.possui_edicula": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.edicula_habitada": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.edicula_alugada": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.aluguel_edicula": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.residente_edicula": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.rg_residente_edicula": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.cpf_residente_edicula": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.possui_outro": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "imovel.cadastro_outro": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.recebe": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.tipo": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.aposentado": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.aposentadoria_numero": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.aposentadoria_valor": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.aposentadoria_orgao": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.pensionista": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.pensao_numero": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.pensao_valor": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.pensao_orgao": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.pensao_data": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "beneficios.outras_rendas": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "atividade.socio_empresa": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "atividade.autonomo": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "atividade.registrado": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.nome": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.rg": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.cpf": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.beneficiario": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.beneficio_numero": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.beneficio_valor": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.socio_empresa": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.outras_rendas": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "conjuge.possui_outro_imovel": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.possui_deficiencia": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.nome": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.parentesco": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.rg": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.cpf": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.beneficiario": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "dependente.beneficio_numero": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "formulario.exercicio": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "formulario.numero_processo": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "formulario.observacoes": {
+          "type": "object",
+          "required": [
+            "rotulo",
+            "tipo",
+            "valor",
+            "status",
+            "evidencias"
+          ],
+          "properties": {
+            "valor": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "evidencias": {
+              "type": "array"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

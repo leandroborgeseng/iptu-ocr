@@ -1,0 +1,6 @@
+[
+  {"name": "duas-paginas-invertidas", "path": "/caminho/local/exemplo1.pdf", "expected_pages": [14, 13]},
+  {"name": "duas-paginas", "path": "/caminho/local/exemplo2.pdf", "expected_pages": [9, 10]},
+  {"name": "tres-paginas", "path": "/caminho/local/exemplo3.pdf", "expected_pages": [1, 2, 3]},
+  {"name": "sem-formulario", "path": "/caminho/local/sem-formulario.pdf", "expected_pages": []}
+]
