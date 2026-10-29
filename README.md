@@ -170,3 +170,12 @@ A execução é inteiramente local. Nenhum PDF, imagem ou dado é enviado a APIs
 A nova etapa foi testada também nas sete imagens de conferência dos três exemplos (resolução reduzida, pois o disco externo estava desconectado). Esses testes verificam execução e geração de artefatos; **não comprovam a exatidão de todos os valores extraídos**. Validar em PDFs originais e em uma amostra rotulada antes de ampliar o lote.
 
 Exemplo completo com dados fictícios: `examples/dados-ficticios.json`. Ele demonstra o formato e valores null; não é um formulário de produção.
+
+
+## Erro de sessão em endereço HTTP
+
+Se o painel abrir em `http://...` com `COOKIE_SECURE=true`, o navegador não envia o cookie de sessão e as ações POST são bloqueadas antes da conexão SMB. O painel agora informa esse caso e as APIs distinguem autenticação do painel (401) de sessão/CSRF (403).
+
+Para um teste em HTTP, defina `COOKIE_SECURE=false` no Coolify, salve e faça novo deploy. Depois recarregue a página. Para uso com HTTPS, mantenha `COOKIE_SECURE=true`. A aplicação não reduz essa proteção automaticamente. Não troque `APP_SECRET` para resolver esse erro.
+
+Exemplo de conexão para `\\servidor\Informatica\Arquivos\Isencao_IPTU`: servidor `servidor` (ou IP), compartilhamento `Informatica`, subpasta `Arquivos/Isencao_IPTU`. Não cole o caminho UNC completo no campo Servidor ou IP.

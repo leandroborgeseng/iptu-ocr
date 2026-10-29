@@ -82,10 +82,15 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
         auth = request.authorization
         if not auth or not (hmac.compare_digest((auth.username or '').encode(), os.environ.get('ADMIN_USER', 'admin').encode())
                             and hmac.compare_digest((auth.password or '').encode(), password.encode())):
+            if request.path.startswith('/api/'):
+                response = jsonify(error='Autenticação do painel necessária. Recarregue a página e entre novamente.', code='panel_auth_required')
+                response.status_code = 401
+                response.headers['WWW-Authenticate'] = 'Basic realm="IPTU"'
+                return response
             return Response('Autenticação necessária.', 401, {'WWW-Authenticate': 'Basic realm="IPTU"'})
         if request.method == 'POST' and not hmac.compare_digest(
                 request.headers.get('X-CSRF-Token', ''), session.get('csrf', 'missing')):
-            abort(403)
+            return jsonify(error='Sessão do painel ausente ou expirada. Recarregue a página. Se estiver acessando por HTTP, configure COOKIE_SECURE=false no Coolify para o teste, ou ative HTTPS mantendo COOKIE_SECURE=true.', code='panel_session_invalid'), 403
 
     @app.after_request
     def headers(response):
@@ -103,7 +108,7 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
     @app.get('/')
     def index():
         session.setdefault('csrf', secrets.token_urlsafe(32))
-        return render_template('index.html', csrf=session['csrf'])
+        return render_template('index.html', csrf=session['csrf'], secure_cookie=app.config['SESSION_COOKIE_SECURE'])
 
     @app.get('/api/schema.json')
     def data_schema():
@@ -372,7 +377,7 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
     def review_page(pid):
         row, document = read_data(pid)
         session.setdefault('csrf', secrets.token_urlsafe(32))
-        return render_template('review.html', csrf=session['csrf'], pid=pid, process=row['name'])
+        return render_template('review.html', csrf=session['csrf'], pid=pid, process=row['name'], secure_cookie=app.config['SESSION_COOKIE_SECURE'])
 
     @app.get('/api/data/<pid>')
     def get_data(pid):

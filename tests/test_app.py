@@ -204,3 +204,24 @@ def test_ocr_review_and_exports_preserve_raw_json(client, tmp_path, monkeypatch)
     versions=list((directory/'history').glob('*/dados.revisado.json'))
     assert len(versions)==1
     assert json.loads(versions[0].read_text())['dados']['requerente']['nome']=='CONFERIDO'
+
+def test_api_errors_identify_panel_auth_and_csrf(client):
+    unauth=client.get('/api/state',headers={'Authorization':''})
+    assert unauth.status_code==401 and unauth.json['code']=='panel_auth_required'
+    assert 'WWW-Authenticate' in unauth.headers
+    csrf=client.post('/api/test',json={},headers={'X-CSRF-Token':''})
+    assert csrf.status_code==403 and csrf.json['code']=='panel_session_invalid'
+    assert 'COOKIE_SECURE' in csrf.json['error']
+    assert not client.application.extensions['iptu']['runtime']['running']
+
+def test_secure_cookie_configuration_is_visible_without_weakening_it(tmp_path,monkeypatch):
+    monkeypatch.setenv('APP_SECRET','x'*48)
+    monkeypatch.setenv('ADMIN_PASSWORD','test-password-123')
+    monkeypatch.setenv('COOKIE_SECURE','true')
+    app=create_app(tmp_path/'data')
+    client=app.test_client()
+    auth='Basic '+base64.b64encode(b'admin:test-password-123').decode()
+    response=client.get('/',headers={'Authorization':auth})
+    assert b'name="secure-cookie" content="true"' in response.data
+    assert 'Secure' in response.headers['Set-Cookie']
+    assert client.post('/api/config',json={},headers={'Authorization':auth}).status_code==403
