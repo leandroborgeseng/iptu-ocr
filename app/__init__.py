@@ -18,6 +18,7 @@ from cryptography.fernet import Fernet
 from flask import Flask, Response, abort, jsonify, render_template, request, send_file, session
 import pymupdf as fitz
 from .source import SMBSource, validate
+from .diagnostics import explain_error
 from .detector import read_page, assemble
 from .extraction import extract_form, apply_review
 
@@ -40,7 +41,7 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
     mutex = threading.Lock()
     cancel = threading.Event()
     runtime = {'running': False, 'operation': '', 'current': '', 'done': 0, 'total': 0,
-               'message': 'Pronto para configurar.', 'error': False}
+               'message': 'Pronto para configurar.', 'error': False, 'error_code': None, 'diagnostics': []}
 
     @contextmanager
     def db():
@@ -68,12 +69,7 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
         return json.loads(cipher.decrypt(row['value'])) if row else {}
 
     def safe_error(exc):
-        # Network libraries sometimes include paths/usernames. Never expose their raw errors.
-        if isinstance(exc, ValueError):
-            return str(exc)[:200]
-        if isinstance(exc, (TimeoutError, ConnectionError)):
-            return 'Tempo de conexão esgotado. Confira rede, VPN e porta TCP 445.'
-        return 'Falha de acesso ou processamento. Confira permissões, conexão e integridade dos PDFs.'
+        return explain_error(exc)[1]
 
     @app.before_request
     def protect():
@@ -125,7 +121,7 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
             if runtime['running']:
                 return jsonify(error='Já existe uma operação em andamento.'), 409
             runtime.update(running=True, operation=operation, current='', done=0, total=0,
-                           message='Iniciando…', error=False)
+                           message='Iniciando…', error=False, error_code=None, diagnostics=[])
             cancel.clear()
         def target():
             try:
@@ -133,7 +129,9 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
                 if cancel.is_set():
                     runtime.update(message='Operação interrompida. O trabalho concluído foi preservado.')
             except Exception as exc:
-                runtime.update(message=safe_error(exc), error=True)
+                code, message = explain_error(exc)
+                runtime.update(message=message, error=True, error_code=code)
+                app.logger.warning('operation_failed operation=%s code=%s exception=%s',operation,code,type(exc).__name__)
             finally:
                 runtime.update(running=False, current='')
         threading.Thread(target=target, daemon=True, name='iptu-worker').start()
@@ -164,9 +162,27 @@ def create_app(data_dir=None, source_factory=SMBSource, page_reader=read_page):
     @app.post('/api/test')
     def test_connection():
         def run():
-            source = source_factory(config())
-            names = source.test()
-            runtime.update(message=f'Conexão confirmada. {len(names)} entradas verificadas (amostra).')
+            connection_config = config()
+            steps = runtime['diagnostics']
+            def step(label, action):
+                entry = {'etapa': label, 'status': 'executando'}
+                steps.append(entry)
+                runtime['current'] = label
+                try:
+                    result = action()
+                    entry['status'] = 'ok'
+                    return result
+                except Exception as exc:
+                    code, message = explain_error(exc)
+                    entry.update(status='erro', codigo=code, mensagem=message)
+                    raise
+            if callable(getattr(source_factory, 'probe', None)):
+                step('Rede e porta TCP 445',lambda: source_factory.probe(connection_config))
+            if cancel.is_set(): return
+            source = step('Negociação SMB e autenticação Windows',lambda: source_factory(connection_config))
+            if cancel.is_set(): return
+            names = step('Compartilhamento, subpasta e permissão de listagem',source.test)
+            runtime.update(message=f'Conexão confirmada. {len(names)} entradas verificadas (amostra). O teste verifica listagem; cada PDF será lido durante o processamento.')
         return launch('conexao', run)
 
     def inventory():

@@ -179,3 +179,16 @@ Se o painel abrir em `http://...` com `COOKIE_SECURE=true`, o navegador não env
 Para um teste em HTTP, defina `COOKIE_SECURE=false` no Coolify, salve e faça novo deploy. Depois recarregue a página. Para uso com HTTPS, mantenha `COOKIE_SECURE=true`. A aplicação não reduz essa proteção automaticamente. Não troque `APP_SECRET` para resolver esse erro.
 
 Exemplo de conexão para `\\servidor\Informatica\Arquivos\Isencao_IPTU`: servidor `servidor` (ou IP), compartilhamento `Informatica`, subpasta `Arquivos/Isencao_IPTU`. Não cole o caminho UNC completo no campo Servidor ou IP.
+
+
+## Diagnóstico de conexão SMB
+
+O botão Testar acesso agora mostra as etapas separadas: (1) resolução/conexão TCP 445 a partir do contêiner, (2) negociação SMB/autenticação e (3) compartilhamento/subpasta/permissão de listagem. As falhas exibem código próprio, como `tcp445_timeout`, `network_unreachable`, `smb_auth_failed`, `smb_share_not_found` ou `smb_access_denied`. Logs de falhas incluem operação/código/classe da exceção, sem imprimir senha ou mensagem bruta da biblioteca.
+
+Se o Windows tem IP privado, o host do Coolify precisa estar na mesma rede ou ter VPN/rota. Confirme também se a rede Docker não se sobrepõe à rede interna Windows. Porta 445 acessível não comprova que a conta/pasta está autorizada; as etapas seguintes verificam isso.
+
+## Lembrar o formulário de conexão
+
+Além da configuração salva de forma criptografada no servidor, o navegador lembra os campos não secretos enquanto você digita: servidor, compartilhamento, subpasta, domínio, usuário e tempo de estabilidade. Isso permite retomar um preenchimento ainda não salvo. **A senha nunca é incluída no armazenamento do navegador.**
+
+Um link `/#conexao?server=SERVIDOR&share=PASTA&subpath=SUBPASTA&domain=DOMINIO` pode preencher os campos de conexão. O perfil é aplicado após carregar a configuração salva, mantém o usuário existente e remove os parâmetros do endereço. Ele não salva senha nem inicia autenticação automaticamente: confira o usuário, informe a senha e clique em Salvar conexão. Valores de rede específicos da instituição não precisam ficar no código público do repositório.

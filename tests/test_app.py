@@ -225,3 +225,28 @@ def test_secure_cookie_configuration_is_visible_without_weakening_it(tmp_path,mo
     assert b'name="secure-cookie" content="true"' in response.data
     assert 'Secure' in response.headers['Set-Cookie']
     assert client.post('/api/config',json={},headers={'Authorization':auth}).status_code==403
+
+def test_network_failure_stops_before_smb_authentication(client,monkeypatch):
+    from app.diagnostics import ConnectionDiagnosticError
+    configure(client)
+    def probe(config):raise ConnectionDiagnosticError('tcp445_timeout','Porta 445 sem resposta.')
+    monkeypatch.setattr(Source,'probe',staticmethod(probe),raising=False)
+    def forbidden(*args):raise AssertionError('SMB authentication must not run')
+    monkeypatch.setattr(Source,'__init__',forbidden)
+    client.post('/api/test',json={})
+    state=wait(client)['runtime']
+    assert state['error_code']=='tcp445_timeout'
+    assert len(state['diagnostics'])==1 and state['diagnostics'][0]['status']=='erro'
+
+
+def test_auth_failure_is_separate_from_network_failure(client,monkeypatch):
+    from smbprotocol.exceptions import SMBAuthenticationError
+    configure(client)
+    monkeypatch.setattr(Source,'probe',staticmethod(lambda config:'TCP OK'),raising=False)
+    def reject(*args):raise SMBAuthenticationError('secret-password-not-to-display')
+    monkeypatch.setattr(Source,'__init__',reject)
+    client.post('/api/test',json={})
+    state=wait(client)['runtime']
+    assert state['error_code']=='smb_auth_failed'
+    assert [s['status'] for s in state['diagnostics']]==['ok','erro']
+    assert 'secret-password-not-to-display' not in json.dumps(state)

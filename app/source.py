@@ -3,6 +3,7 @@ import ntpath
 import time
 from pathlib import PureWindowsPath
 import smbclient
+from .diagnostics import probe_tcp445
 
 
 def validate(config):
@@ -23,6 +24,11 @@ def validate(config):
 
 
 class SMBSource:
+    @staticmethod
+    def probe(config):
+        validated = validate(dict(config))
+        return probe_tcp445(validated['server'])
+
     def __init__(self, config):
         self.config = validate(dict(config))
         user = self.config['username']
