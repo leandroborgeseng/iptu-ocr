@@ -24,6 +24,7 @@ from .upload_index import UploadIndex
 from .detector import read_page, assemble
 from .extraction import extract_form, apply_review
 from .page_scanner import PageScanner
+from .form_selection import select_form,SELECTION_POLICY
 
 
 def create_app(data_dir=None, page_reader=read_page):
@@ -125,6 +126,11 @@ def create_app(data_dir=None, page_reader=read_page):
             preserved=bool(result and result.get('pdf') and (root/'results'/old['id']/'formulario.pdf').exists())
             status=old['status'] if old['status'] not in ('pendente','processando') else 'revisao'
             con.execute("UPDATE processes SET source_kind='legacy',active=?,status=? WHERE id=?",(int(preserved),status,old['id']))
+        for old in con.execute("SELECT * FROM processes WHERE active=1 AND result IS NOT NULL").fetchall():
+            result=json.loads(old['result']) or {}
+            if result.get('selection_policy')!=SELECTION_POLICY:
+                if old['source_kind']=='upload':con.execute("UPDATE processes SET status='pendente',result=NULL WHERE id=?",(old['id'],))
+                else:con.execute('UPDATE processes SET active=0 WHERE id=?',(old['id'],))
     document_cache=DocumentCache(root,db)
     upload_index=UploadIndex(db)
 
@@ -424,7 +430,7 @@ def create_app(data_dir=None, page_reader=read_page):
         previous=json.loads(row['result']) if row['result'] else None
         if previous and previous.get('pdf') and not previous.get('failures') and (output/'formulario.pdf').exists() and (output/'manifesto.json').exists():
             checkpoint=json.loads((output/'manifesto.json').read_text())
-            if checkpoint.get('source_fingerprint')==row['fingerprint']:
+            if checkpoint.get('source_fingerprint')==row['fingerprint'] and checkpoint.get('selection_policy')==SELECTION_POLICY:
                 return checkpoint['status'],previous
         removed_bytes=0
         # Archive prior data/reviews before an explicit re-extraction.
@@ -449,6 +455,15 @@ def create_app(data_dir=None, page_reader=read_page):
                     runtime['current'] = f"{row['name']} · PDF {index+1}/{len(files)}"
                     cached=document_cache.get(item.get('sha256')) if row['source_kind']=='upload' else None
                     if cached:
+                        if any(p.get('cache_page') is not None and p.get('evidence',{}).get('exercicio_regra')!='v1' for p in cached['pages']):
+                            refreshed,_=scanner.scan(cached['path'],work,page_reader,cancel,
+                                lambda done,total:runtime.update(current=f"{row['name']} · conferindo exercício · {done}/{total} páginas preservadas"))
+                            by_page={p['page']-1:p for p in refreshed}
+                            for record in cached['pages']:
+                                if record.get('cache_page') is not None:
+                                    updated=by_page[record['cache_page']]
+                                    for key in ('evidence','roles','candidate','rotation'):record[key]=updated[key]
+                            with db() as con:con.execute('UPDATE pdf_cache SET page_data=? WHERE sha256=?',(json.dumps(cached['pages']),item['sha256']))
                         local.append(None)
                         pages.extend(dict(**p,file_index=index,source=item['relative'],sha256=item['sha256'],cache_pdf=str(cached['path'])) for p in cached['pages'])
                         removed_bytes+=document_cache.purge_originals(item['sha256'])
@@ -470,12 +485,11 @@ def create_app(data_dir=None, page_reader=read_page):
                     if len(local) <= index:
                         local.append(None)
                     failures.append(dict(source=item['relative'], error=safe_error(exc)))
-            status, selected = assemble(pages)
+            status, selected,selection_reason = select_form(pages)
             if failures:
                 status = 'revisao' if selected else 'erro'
             # Retain uncertain candidate pages too, in a separate review section of the PDF.
-            uncertain = [p for p in pages if p['candidate'] and not p['roles']]
-            export = selected + uncertain
+            export = selected
             if export:
                 with fitz.open() as extracted:
                     for record in export:
@@ -486,13 +500,14 @@ def create_app(data_dir=None, page_reader=read_page):
                             dest.set_rotation((dest.rotation + record['rotation']) % 360)
                     extracted.save(output / 'formulario.pdf', deflate=True)
             manifest = dict(process=row['name'], status=status, source_kind=row['source_kind'], source_id=row['source_id'], created=datetime.now(timezone.utc).isoformat(),
+                selection_policy=SELECTION_POLICY,target_year=2027,selection_reason=selection_reason,
                 classifier=DETECTOR_VERSION, source_fingerprint=row['fingerprint'], definitive_ocr=False,
                 warning='Identificação automática preliminar. Validar modelos e completude no piloto.',
                 sources=files, pages=pages, selected=export, failures=failures)
             atomic = output / 'manifesto.tmp'
             atomic.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
             atomic.replace(output / 'manifesto.json')
-        return status, dict(pages=len(export), pdf=bool(export), manifest=True, failures=len(failures),originals_removed=row['source_kind']=='upload' and not failures,original_bytes_removed=removed_bytes)
+        return status, dict(selection_policy=SELECTION_POLICY,selection_reason=selection_reason,target_year=2027,pages=len(export), pdf=bool(export), manifest=True, failures=len(failures),originals_removed=row['source_kind']=='upload' and not failures,original_bytes_removed=removed_bytes)
 
     def generate_data(row, result, dpi=300):
         output = root / 'results' / row['id']

@@ -8,7 +8,7 @@ import pymupdf as fitz
 from app import create_app
 from app.detector import classify, assemble
 
-FRONT = 'Prefeitura requerimento de isencao de IPTU nome cadastro do imovel'
+FRONT = 'Prefeitura requerimento de isencao de IPTU 2027 nome cadastro do imovel'
 CONT = 'Prefeitura conjuge dependente trabalha socio de empresa imovel'
 END = 'Assinatura do requerente presente requerimento lei complementar isencao IPTU'
 
@@ -357,3 +357,40 @@ def test_selection_can_hold_36_gb_without_raising_per_file_json_limits(client):
     assert response.status_code==201
     limits=client.get('/api/uploads').json['limits']
     assert limits['batch_bytes']>=36*1024**3 and limits['file_bytes']==100*1024**2
+
+
+def test_only_2027_form_is_exported_front_first_from_mixed_inverted_pdf(client):
+    data=pdf_bytes(FRONT.replace('2027','2026'),CONT+' '+END+' exercicio 2026',CONT+' '+END+' exercicio 2027',FRONT)
+    items=[('Raiz/P1/a.pdf',data)];batch=begin_test_upload(client,items)
+    upload_test_file(client,batch,*items[0]);client.post(f'/api/uploads/{batch}/finish',json={})
+    client.post('/api/run',json={'limit':1});row=wait(client)['rows'][0]
+    assert row['status']=='completo_provavel' and row['result']['pages']==2
+    manifest=client.get('/results/'+row['id']+'/json').json
+    assert [p['page'] for p in manifest['selected']]==[4,3] and manifest['target_year']==2027
+    with fitz.open(stream=client.get('/results/'+row['id']+'/pdf').data,filetype='pdf') as document:
+        assert 'requerimento' in document[0].get_text().lower()
+        assert len(document)==2 and '2026' not in ''.join(p.get_text() for p in document)
+
+
+def test_previous_policy_and_candidate_cache_are_rechecked_without_original_upload(client):
+    items=[('Raiz/P1/a.pdf',pdf_bytes(CONT+' '+END,FRONT))]
+    batch=begin_test_upload(client,items);upload_test_file(client,batch,*items[0]);client.post(f'/api/uploads/{batch}/finish',json={})
+    client.post('/api/run',json={'limit':1});row=wait(client)['rows'][0]
+    root=client.application.extensions['iptu']['root'];db=client.application.extensions['iptu']['db']
+    assert not list((root/'uploads'/batch/'files').glob('*.pdf'))
+    with db() as con:
+        old=dict(row['result']);old.pop('selection_policy')
+        con.execute('UPDATE processes SET result=? WHERE id=?',(json.dumps(old),row['id']))
+        for cached in con.execute('SELECT sha256,page_data FROM pdf_cache').fetchall():
+            pages=json.loads(cached['page_data'])
+            for p in pages:
+                p['evidence'].pop('exercicio_regra',None);p['evidence'].pop('exercicios',None)
+            con.execute('UPDATE pdf_cache SET page_data=? WHERE sha256=?',(json.dumps(pages),cached['sha256']))
+    def reader(page,*_):
+        text=page.get_text();return text,classify(text),0
+    restarted=authenticated_test_client(create_app(root,page_reader=reader))
+    assert restarted.get('/api/state').json['rows'][0]['status']=='pendente'
+    restarted.post('/api/run',json={'limit':1});updated=wait(restarted)['rows'][0]
+    assert updated['status']=='completo_provavel' and updated['result']['target_year']==2027
+    manifest=restarted.get('/results/'+row['id']+'/json').json
+    assert [p['page'] for p in manifest['selected']]==[2,1]

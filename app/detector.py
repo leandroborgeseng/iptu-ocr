@@ -28,7 +28,9 @@ def classify(text):
         roles.append('encerramento')
     candidate = bool(roles) or ('iptu' in t and ('isencao' in t or 'requerimento' in t)) or len(family) >= 2
     return dict(roles=roles, candidate=candidate,
-                evidence=dict(inicio=front, continuacao=family, encerramento=ending))
+                evidence=dict(inicio=front, continuacao=family, encerramento=ending,
+                              exercicios=sorted({int(y) for y in re.findall(r'\b(?:iptu|exercicio(?: fiscal)?|requerimento)\s*(?:do\s+exercicio\s*)?(?:de\s*)?[:/\-–]?\s*(20\d{2})\b',t)}),
+                              exercicio_regra='v1'))
 
 
 def read_page(page, workdir, index, dpi=145):

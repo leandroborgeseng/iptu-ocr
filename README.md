@@ -78,6 +78,14 @@ O ajuste aceita de 1 a 4 trabalhadores; comece com 2 e confira o limite de CPU/m
 
 O detector e sua versão de cache permanecem os mesmos nesta otimização. Formulários e análises já armazenados continuam reutilizáveis. As durações de identificação por PDF, número de páginas e trabalhadores usados ficam em `runtime.details.timings` na resposta de `/api/state` da operação atual. O ganho depende do tipo de página e dos recursos efetivamente disponíveis; não há promessa de reduzir pela metade o tempo total.
 
+## Um formulário de 2027 por processo
+
+A seleção definitiva aceita **no máximo um formulário com exercício 2027 confirmado** por processo. A confirmação usa contexto de exercício/IPTU/requerimento, não datas de nascimento ou anos de leis. As páginas são ordenadas pelo conteúdo: frente antes da continuação/encerramento, mesmo quando a segunda página aparece primeiro no PDF de origem. O manifesto mantém a numeração original para auditoria.
+
+Formulários de outros exercícios não entram no PDF nem na etapa de OCR/JSON. Ano ausente ou conflitante, dois formulários de 2027 ou páginas duplicadas sem associação inequívoca exigem revisão; o sistema não concatena os candidatos nem escolhe um deles arbitrariamente. Fragmentos candidatos permanecem no cache para conferência, separados do resultado definitivo.
+
+Na atualização, resultados anteriores à regra voltam a pendentes para nova seleção. As páginas candidatas já preservadas são usadas para confirmar o exercício, sem reenviar o original. Revisões e dados anteriores são arquivados no histórico ao reprocessar. O OCR por página continua reaproveitável; o JSON final passa pela nova seleção. Resultados antigos sem origem de upload ficam fora da lista ativa e permanecem no volume, exigindo upload para entrar no novo fluxo.
+
 ## Resultados e revisão
 
 O detector usa texto existente e OCR de classificação para localizar frente, continuação e encerramento. Gera PDF somente com páginas candidatas e um manifesto com arquivo/página/SHA de origem. `Completo provável` ainda exige validação; `Não encontrado` exige amostragem. Os modelos de formulário variam e precisam ser validados com exemplos reais.

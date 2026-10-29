@@ -75,7 +75,7 @@ class DocumentCache:
     def ocr_key(self,manifest,dpi):
         selected=manifest.get('selected',[])
         if not selected or not all(p.get('sha256') for p in selected):return None
-        return hashlib.sha256(json.dumps([PIPELINE_VERSION,dpi,[(p['sha256'],p['page'],p['rotation']) for p in selected]],sort_keys=True).encode()).hexdigest()
+        return hashlib.sha256(json.dumps([PIPELINE_VERSION,manifest.get('selection_policy'),dpi,[(p['sha256'],p['page'],p['rotation']) for p in selected]],sort_keys=True).encode()).hexdigest()
 
     def restore_ocr(self,key,manifest,output):
         if not key:return None

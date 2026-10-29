@@ -4,7 +4,8 @@ import sys
 import tempfile
 from pathlib import Path
 import pymupdf as fitz
-from .detector import read_page, assemble
+from .detector import read_page
+from .form_selection import select_form
 
 
 def main():
@@ -19,7 +20,7 @@ def main():
                 for i, page in enumerate(doc):
                     _, decision, rotation = read_page(page, Path(temp), i)
                     pages.append(dict(file_index=0, page=i+1, rotation=rotation, **decision))
-        status, selected = assemble(pages)
+        status, selected, _ = select_form(pages)
         actual = [p['page'] for p in selected]
         passed = actual == sample['expected_pages']
         failed |= not passed
