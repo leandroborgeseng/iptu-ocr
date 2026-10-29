@@ -102,3 +102,9 @@ node --test tests/*.test.cjs
 ```
 
 Os testes cobrem upload recursivo lógico, rejeição de caminhos e conteúdos inválidos, autenticação/CSRF, retomada, reutilização por conteúdo, descarte seguro de cópias, preparação antes do término da seleção, extração/revisão e vetores SHA-256. O limite de 36 GiB é verificado por manifesto; os testes não transferem um acervo real desse tamanho.
+
+## Reiniciar os testes com os mesmos PDFs
+
+No fim do painel, abra **Administração dos testes**. Aguarde os envios e processamentos terminarem, digite `APAGAR TESTES` e clique em **Apagar dados de teste e liberar reenvio**. Isso remove definitivamente resultados, formulários, OCRs, JSONs, revisões, histórico, cópias recebidas, cache e comprovantes de upload de toda a instalação. Os mesmos arquivos passarão novamente pela identificação e pelo OCR no próximo envio. Os originais externos, as credenciais do painel e as configurações do Coolify não são alterados.
+
+A limpeza exige autenticação administrativa, proteção CSRF e a frase de confirmação. É recusada durante um processamento ou upload ativo. Use apenas para reiniciar uma instalação de testes; não há recuperação dos resultados excluídos pelo aplicativo.

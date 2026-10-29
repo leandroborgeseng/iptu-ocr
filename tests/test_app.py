@@ -394,3 +394,51 @@ def test_previous_policy_and_candidate_cache_are_rechecked_without_original_uplo
     assert updated['status']=='completo_provavel' and updated['result']['target_year']==2027
     manifest=restarted.get('/results/'+row['id']+'/json').json
     assert [p['page'] for p in manifest['selected']]==[2,1]
+
+
+def test_reset_tests_clears_outputs_receipts_and_cache_but_preserves_external_original(client,tmp_path):
+    data=pdf_bytes(FRONT,CONT+' '+END)
+    external=tmp_path/'original.pdf';external.write_bytes(data)
+    items=[('Raiz/P1/a.pdf',data)];batch=begin_test_upload(client,items)
+    plan_test_files(client,batch,items);upload_test_file(client,batch,*items[0]);client.post(f'/api/uploads/{batch}/finish',json={})
+    client.post('/api/run',json={'limit':1});wait(client)
+    root=client.application.extensions['iptu']['root'];(root/'results'/'manual-review.json').write_text('{}')
+    response=client.post('/api/admin/reset-tests',json={'confirmation':'APAGAR TESTES'})
+    assert response.status_code==200 and response.json['deleted']['processes']==1
+    assert client.get('/api/state').json['total']==0 and client.get('/api/uploads').json['uploads']==[]
+    assert all(not list((root/name).iterdir()) for name in ('uploads','results','cache'))
+    assert external.read_bytes()==data
+    new_batch=begin_test_upload(client,items)
+    assert plan_test_files(client,new_batch,items)[0]['state']=='required'
+    assert upload_test_file(client,new_batch,*items[0]).status_code==200
+
+
+def test_reset_requires_confirmation_and_idle_worker(client):
+    runtime=client.application.extensions['iptu']['runtime']
+    assert client.post('/api/admin/reset-tests',json={}).status_code==400
+    assert client.post('/api/admin/reset-tests',json={'confirmation':'APAGAR TESTES'},headers={'X-CSRF-Token':''}).status_code==403
+    runtime['running']=True
+    try:assert client.post('/api/admin/reset-tests',json={'confirmation':'APAGAR TESTES'}).status_code==409
+    finally:runtime['running']=False
+
+
+def test_reset_rejects_overlapping_upload_request(client,monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    from app.document_cache import DocumentCache
+    items=[('Raiz/P1/a.pdf',pdf_bytes(FRONT))];batch=begin_test_upload(client,items)
+    entered=threading.Event();release=threading.Event();original=DocumentCache.get
+    def paused_get(self,sha):
+        entered.set()
+        assert release.wait(5)
+        return original(self,sha)
+    monkeypatch.setattr(DocumentCache,'get',paused_get)
+    other=authenticated_test_client(client.application)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        pending=executor.submit(plan_test_files,other,batch,items)
+        try:
+            assert entered.wait(5)
+            assert client.post('/api/admin/reset-tests',json={'confirmation':'APAGAR TESTES'}).status_code==409
+            assert len(client.get('/api/uploads').json['uploads'])==1
+        finally:release.set()
+        assert pending.result()[0]['state']=='required'

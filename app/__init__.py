@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from contextlib import contextmanager
 from pathlib import Path
 
-from flask import Flask, Response, abort, jsonify, render_template, request, send_file, session
+from flask import Flask, Response, abort, jsonify, render_template, request, send_file, session, g
 import pymupdf as fitz
 from .diagnostics import explain_error, ProcessingDiagnosticError
 from .uploads import relative_pdf_path, group_items, LocalUploadSource
@@ -46,6 +46,7 @@ def create_app(data_dir=None, page_reader=read_page):
     for stale in uploads_root.glob('*/files/*.part'):
         if not stale.is_symlink():stale.unlink(missing_ok=True)
     upload_lock = threading.Lock()
+    maintenance_lock = threading.Lock()
     upload_limits = dict(file_bytes=int(os.environ.get('UPLOAD_MAX_FILE_MB','100'))*1024*1024,
                          batch_bytes=int(os.environ.get('UPLOAD_MAX_BATCH_MB','65536'))*1024*1024,
                          files=int(os.environ.get('UPLOAD_MAX_FILES','20000')))
@@ -164,6 +165,42 @@ def create_app(data_dir=None, page_reader=read_page):
         response.headers['Cache-Control'] = 'no-store'
         response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         return response
+
+    @app.before_request
+    def protect_upload_reset_races():
+        if request.method=='POST' and (request.path.startswith('/api/uploads') or request.path=='/api/admin/reset-tests'):
+            if not maintenance_lock.acquire(blocking=False):
+                return jsonify(error='Há um envio ou uma limpeza em andamento. Aguarde e tente novamente.'),409
+            g.maintenance_locked=True
+
+    @app.teardown_request
+    def release_maintenance_lock(error):
+        if g.pop('maintenance_locked',False):maintenance_lock.release()
+
+    @app.post('/api/admin/reset-tests')
+    def reset_test_data():
+        if (request.get_json(silent=True) or {}).get('confirmation')!='APAGAR TESTES':
+            return jsonify(error='Digite APAGAR TESTES para confirmar a exclusão definitiva dos dados de teste.'),400
+        with mutex,upload_lock:
+            if runtime['running']:return jsonify(error='Interrompa o processamento e aguarde sua conclusão antes da limpeza.'),409
+            directories=[root/name for name in ('uploads','results','cache')]
+            if any(path.is_symlink() for path in directories):
+                return jsonify(error='Limpeza recusada: um diretório de dados é um link simbólico.'),409
+            scanner.close()
+            with db() as con:
+                counts={table:con.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] for table in ('processes','uploads','upload_files','pdf_cache')}
+            # Fixed application-owned paths only; external source paths are never used.
+            for directory in directories:
+                if directory.exists():shutil.rmtree(directory)
+                directory.mkdir(exist_ok=True)
+            with db() as con:
+                for table in ('upload_processes','upload_plan','upload_files','pdf_cache','processes','uploads'):
+                    con.execute(f'DELETE FROM {table}')
+            cancel.clear()
+            runtime.update(running=False,operation='',current='',done=0,total=0,error=False,error_code=None,
+                           diagnostics=[],details={},cancelled=False,job_id=None,
+                           message='Dados de teste apagados. Selecione novamente as pastas para começar do zero.')
+        return jsonify(ok=True,deleted=counts)
 
     @app.get('/healthz')
     def health():
