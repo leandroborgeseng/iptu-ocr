@@ -52,7 +52,7 @@ def create_app(data_dir=None, page_reader=read_page):
     mutex = threading.Lock()
     cancel = threading.Event()
     try:
-        workers=int(os.environ.get('DETECTOR_WORKERS','2'))
+        workers=int(os.environ.get('DETECTOR_WORKERS','3'))
         if not 1<=workers<=4:raise ValueError()
     except ValueError:raise RuntimeError('DETECTOR_WORKERS deve ser de 1 a 4.')
     scanner=PageScanner(workers)

@@ -18,15 +18,16 @@ def make_document(path):
         document.save(path)
 
 
-def test_real_process_workers_match_serial_and_preserve_page_order(tmp_path):
+@pytest.mark.parametrize("workers",[2,3,4])
+def test_real_process_workers_match_serial_and_preserve_page_order(tmp_path,workers):
     path=tmp_path/'input.pdf';make_document(path)
-    serial=PageScanner(1);parallel=PageScanner(2)
+    serial=PageScanner(1);parallel=PageScanner(workers)
     try:
         expected,_=serial.scan(path,tmp_path,read_page,threading.Event(),lambda *_:None)
         observed,timing=parallel.scan(path,tmp_path,read_page,threading.Event(),lambda *_:None)
         assert observed==expected
         assert [p['page'] for p in observed]==[1,2,3]
-        assert timing['workers']==2 and timing['pages']==3
+        assert timing['workers']==workers and timing['pages']==3
         pool=parallel.pool
         repeated,_=parallel.scan(path,tmp_path,read_page,threading.Event(),lambda *_:None)
         assert repeated==expected and parallel.pool is pool

@@ -70,11 +70,11 @@ python -m app
 
 ## Desempenho da identificação
 
-`DETECTOR_WORKERS=2` é o padrão recomendado para um servidor com 4 vCPUs e 16 GB de RAM. A identificação analisa até duas páginas simultaneamente, em processos separados. Cada processo abre o seu próprio PDF; objetos PyMuPDF não são compartilhados entre threads. Os resultados são reunidos na ordem original das páginas.
+`DETECTOR_WORKERS=3` é o padrão de identificação. A identificação analisa até três páginas simultaneamente, em processos separados. Cada processo abre o seu próprio PDF; objetos PyMuPDF não são compartilhados entre threads. Os resultados são reunidos na ordem original das páginas.
 
 A fila de processos continua serial. O paralelismo é interno à identificação dos PDFs com mais de duas páginas; o OCR definitivo dos formulários continua na etapa seguinte. Os trabalhadores são reutilizados entre PDFs e cada comando Tesseract usa um único thread de CPU. Não há fila ilimitada de páginas na memória. Documentos de até duas páginas são analisados sequencialmente para evitar o custo de iniciar processos auxiliares.
 
-O ajuste aceita de 1 a 4 trabalhadores; comece com 2 e confira o limite de CPU/memória atribuído ao contêiner no Coolify, além da capacidade total do host. Use 1 para diagnóstico ou se houver disputa de recursos. A interrupção aguarda as páginas já em execução terminarem antes de remover os temporários.
+O ajuste aceita de 1 a 4 trabalhadores; o padrão é 3 e é possível usar 4 para priorizar vazão. Confira o limite de CPU/memória atribuído ao contêiner no Coolify, além da capacidade total do host. Se a variável já estiver salva como 2 no Coolify, altere-a explicitamente para 3 (ou 4); o valor salvo prevalece sobre o padrão do Compose. Faça novo deploy. Use 1 para diagnóstico ou se houver disputa de recursos. A interrupção aguarda as páginas já em execução terminarem antes de remover os temporários.
 
 O detector e sua versão de cache permanecem os mesmos nesta otimização. Formulários e análises já armazenados continuam reutilizáveis. As durações de identificação por PDF, número de páginas e trabalhadores usados ficam em `runtime.details.timings` na resposta de `/api/state` da operação atual. O ganho depende do tipo de página e dos recursos efetivamente disponíveis; não há promessa de reduzir pela metade o tempo total.
 
