@@ -23,6 +23,7 @@ from .document_cache import DocumentCache, DETECTOR_VERSION, PIPELINE_VERSION
 from .upload_index import UploadIndex
 from .detector import read_page, assemble
 from .extraction import extract_form, apply_review
+from .page_scanner import PageScanner
 
 
 def create_app(data_dir=None, page_reader=read_page):
@@ -49,6 +50,11 @@ def create_app(data_dir=None, page_reader=read_page):
                          files=int(os.environ.get('UPLOAD_MAX_FILES','20000')))
     mutex = threading.Lock()
     cancel = threading.Event()
+    try:
+        workers=int(os.environ.get('DETECTOR_WORKERS','2'))
+        if not 1<=workers<=4:raise ValueError()
+    except ValueError:raise RuntimeError('DETECTOR_WORKERS deve ser de 1 a 4.')
+    scanner=PageScanner(workers)
     runtime = {'running': False, 'operation': '', 'current': '', 'done': 0, 'total': 0,
                'message': 'Pronto para receber pastas e PDFs.', 'error': False, 'error_code': None, 'diagnostics': []}
 
@@ -361,14 +367,9 @@ def create_app(data_dir=None, page_reader=read_page):
                     if cached is None:
                         with tempfile.TemporaryDirectory(prefix='iptu-prepare-') as temp:
                             work=Path(temp);original=work/'original.pdf';source.copy(item,original)
-                            pages=[]
-                            with fitz.open(original) as document:
-                                if document.needs_pass:raise ValueError('PDF protegido por senha. Envie uma cópia que possa ser lida.')
-                                for i,page in enumerate(document):
-                                    if cancel.is_set():raise InterruptedError()
-                                    runtime['current']=f"{item['relative']} · página {i+1}/{len(document)}"
-                                    _,decision,rotation=page_reader(page,work,str(i))
-                                    pages.append(dict(page=i+1,rotation=rotation,**decision))
+                            pages,timing=scanner.scan(original,work,page_reader,cancel,
+                                lambda done,total:runtime.update(current=f"{item['relative']} · {done}/{total} páginas · até {workers} trabalhadores"))
+                            details.setdefault('timings',[]).append(dict(arquivo=item['relative'],**timing))
                             document_cache.store(item['sha256'],pages,original)
                     details['removed_bytes']+=document_cache.purge_originals(item['sha256'])
                     details['prepared']+=1
@@ -455,16 +456,10 @@ def create_app(data_dir=None, page_reader=read_page):
                     start=len(pages)
                     source.copy(item, destination)
                     local.append(destination)
-                    with fitz.open(destination) as document:
-                        if document.needs_pass:
-                            raise ValueError('PDF protegido por senha.')
-                        for page_index, page in enumerate(document):
-                            if cancel.is_set():
-                                raise InterruptedError()
-                            runtime['current'] = f"{row['name']} · PDF {index+1}/{len(files)} · página {page_index+1}/{len(document)}"
-                            _, decision, rotation = page_reader(page, work, f'{index}-{page_index}')
-                            pages.append(dict(file_index=index, source=item['relative'], page=page_index+1,
-                                              rotation=rotation, **decision))
+                    scanned,timing=scanner.scan(destination,work,page_reader,cancel,
+                        lambda done,total:runtime.update(current=f"{row['name']} · PDF {index+1}/{len(files)} · {done}/{total} páginas · até {workers} trabalhadores"))
+                    pages.extend(dict(**record,file_index=index,source=item['relative']) for record in scanned)
+                    runtime.setdefault('details',{}).setdefault('timings',[]).append(dict(arquivo=item['relative'],**timing))
                     if row['source_kind']=='upload':
                         cached=document_cache.store(item['sha256'],pages[start:],destination)
                         pages[start:]=[dict(**p,file_index=index,source=item['relative'],sha256=item['sha256'],cache_pdf=str(cached['path'])) for p in cached['pages']]
@@ -777,5 +772,5 @@ def create_app(data_dir=None, page_reader=read_page):
             abort(404)
         return send_file(path, as_attachment=True, download_name=row['name'] + '-' + names[kind])
 
-    app.extensions['iptu'] = dict(db=db, runtime=runtime, root=root)
+    app.extensions['iptu'] = dict(db=db, runtime=runtime, root=root,scanner=scanner)
     return app
