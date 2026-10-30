@@ -1,7 +1,7 @@
 """Select at most one unambiguous form for the requested tax exercise."""
 from .detector import assemble
 
-SELECTION_POLICY='single-form-2027-v1'
+SELECTION_POLICY='single-form-2027-v2'
 
 
 def years(page):return set(page.get('evidence',{}).get('exercicios',[]))

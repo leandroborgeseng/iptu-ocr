@@ -76,7 +76,17 @@ A fila de processos continua serial. O paralelismo é interno à identificação
 
 O ajuste aceita de 1 a 4 trabalhadores; o padrão é 3 e é possível usar 4 para priorizar vazão. Confira o limite de CPU/memória atribuído ao contêiner no Coolify, além da capacidade total do host. Se a variável já estiver salva como 2 no Coolify, altere-a explicitamente para 3 (ou 4); o valor salvo prevalece sobre o padrão do Compose. Faça novo deploy. Use 1 para diagnóstico ou se houver disputa de recursos. A interrupção aguarda as páginas já em execução terminarem antes de remover os temporários.
 
-O detector e sua versão de cache permanecem os mesmos nesta otimização. Formulários e análises já armazenados continuam reutilizáveis. As durações de identificação por PDF, número de páginas e trabalhadores usados ficam em `runtime.details.timings` na resposta de `/api/state` da operação atual. O ganho depende do tipo de página e dos recursos efetivamente disponíveis; não há promessa de reduzir pela metade o tempo total.
+O paralelismo reutiliza o cache existente. Quando uma regra de seleção é atualizada, as páginas candidatas preservadas podem ser reanalisadas sem reenviar o PDF completo. As durações de identificação por PDF, número de páginas e trabalhadores usados ficam em `runtime.details.timings` na resposta de `/api/state` da operação atual. O ganho depende do tipo de página e dos recursos efetivamente disponíveis; não há promessa de reduzir pela metade o tempo total.
+
+### Validação local com amostras reais
+
+Em uma comparação local de identificação com 4 trabalhadores, 19 PDFs e 263 páginas, o tempo passou de aproximadamente 127 para 104 segundos. A versão ajustada selecionou os 9 formulários de 2027 (18 páginas) da referência visual, incluindo páginas invertidas e uma frente com título parcialmente ilegível que a versão anterior não selecionava. O teste não inclui upload nem OCR definitivo em 300 dpi e não estima o tempo do acervo inteiro no servidor. Documentos, imagens e dados pessoais usados nessa validação não fazem parte do repositório.
+
+### Triagem com texto digital confiável
+
+O detector evita renderização e Tesseract quando encontra bastante texto digital no corpo da página, com sinais de texto português legível, sem imagem grande e sem indícios de formulário. Cabeçalhos/rodapés SEI isolados, imagens digitalizadas e candidatos ambíguos continuam pelo OCR. Os PNGs temporários usam compressão leve, preservando os mesmos pixels.
+
+Uma regra adicional aceita título parcialmente ilegível somente com “isenção de IPTU 2027”, Prefeitura e vários rótulos característicos do formulário. As páginas candidatas já preservadas recebem a nova análise ao aplicar a versão atual da seleção; não é necessário reenviar originais só por essa atualização. Anos ausentes continuam exigindo revisão.
 
 ## Um formulário de 2027 por processo
 

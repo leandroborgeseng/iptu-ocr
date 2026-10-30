@@ -21,7 +21,7 @@ from .diagnostics import explain_error, ProcessingDiagnosticError
 from .uploads import relative_pdf_path, group_items, LocalUploadSource
 from .document_cache import DocumentCache, DETECTOR_VERSION, PIPELINE_VERSION
 from .upload_index import UploadIndex
-from .detector import read_page, assemble
+from .detector import read_page, assemble, CLASSIFICATION_RULE
 from .extraction import extract_form, apply_review
 from .page_scanner import PageScanner
 from .form_selection import select_form,SELECTION_POLICY
@@ -492,7 +492,7 @@ def create_app(data_dir=None, page_reader=read_page):
                     runtime['current'] = f"{row['name']} · PDF {index+1}/{len(files)}"
                     cached=document_cache.get(item.get('sha256')) if row['source_kind']=='upload' else None
                     if cached:
-                        if any(p.get('cache_page') is not None and p.get('evidence',{}).get('exercicio_regra')!='v1' for p in cached['pages']):
+                        if any(p.get('cache_page') is not None and p.get('evidence',{}).get('exercicio_regra')!=CLASSIFICATION_RULE for p in cached['pages']):
                             refreshed,_=scanner.scan(cached['path'],work,page_reader,cancel,
                                 lambda done,total:runtime.update(current=f"{row['name']} · conferindo exercício · {done}/{total} páginas preservadas"))
                             by_page={p['page']-1:p for p in refreshed}
