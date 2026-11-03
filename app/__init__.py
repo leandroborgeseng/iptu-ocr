@@ -55,7 +55,10 @@ def create_app(data_dir=None, page_reader=read_page):
     try:
         workers=int(os.environ.get('DETECTOR_WORKERS','3'))
         if not 1<=workers<=4:raise ValueError()
-    except ValueError:raise RuntimeError('DETECTOR_WORKERS deve ser de 1 a 4.')
+    except ValueError:
+        workers=3
+        app.logger.warning('DETECTOR_WORKERS inválido: use um inteiro de 1 a 4. Usando 3 trabalhadores para manter o serviço disponível.')
+    app.config['DETECTOR_WORKERS']=workers
     scanner=PageScanner(workers)
     runtime = {'running': False, 'operation': '', 'current': '', 'done': 0, 'total': 0,
                'message': 'Pronto para receber pastas e PDFs.', 'error': False, 'error_code': None, 'diagnostics': []}

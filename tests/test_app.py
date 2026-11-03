@@ -442,3 +442,21 @@ def test_reset_rejects_overlapping_upload_request(client,monkeypatch):
             assert len(client.get('/api/uploads').json['uploads'])==1
         finally:release.set()
         assert pending.result()[0]['state']=='required'
+
+
+@pytest.mark.parametrize('value',['0','-1','5','8','16','','auto','4.0','${DETECTOR_WORKERS}'])
+def test_invalid_worker_configuration_warns_and_keeps_service_available(client,tmp_path,monkeypatch,caplog,value):
+    monkeypatch.setenv('DETECTOR_WORKERS',value)
+    app=create_app(tmp_path/'invalid-workers')
+    assert app.config['DETECTOR_WORKERS']==3
+    assert app.extensions['iptu']['scanner'].workers==3
+    assert app.test_client().get('/healthz').status_code==200
+    assert 'DETECTOR_WORKERS inválido' in caplog.text
+
+
+@pytest.mark.parametrize('value',['1','2','3','4',' 4 '])
+def test_valid_worker_configuration_is_preserved(client,tmp_path,monkeypatch,value):
+    monkeypatch.setenv('DETECTOR_WORKERS',value)
+    app=create_app(tmp_path/'valid-workers')
+    assert app.config['DETECTOR_WORKERS']==int(value)
+    assert app.test_client().get('/healthz').status_code==200
