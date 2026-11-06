@@ -18,7 +18,7 @@ def make_document(path):
         document.save(path)
 
 
-@pytest.mark.parametrize("workers",[2,3,4])
+@pytest.mark.parametrize("workers",[2,3,4,8,12,16])
 def test_real_process_workers_match_serial_and_preserve_page_order(tmp_path,workers):
     path=tmp_path/'input.pdf';make_document(path)
     serial=PageScanner(1);parallel=PageScanner(workers)

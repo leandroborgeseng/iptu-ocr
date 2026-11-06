@@ -20,7 +20,7 @@ def scan_page(path, directory, number):
 
 
 class PageScanner:
-    def __init__(self,workers=3):
+    def __init__(self,workers=12):
         self.workers=workers
         self.pool=None
         atexit.register(self.close)

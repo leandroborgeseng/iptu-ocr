@@ -449,7 +449,7 @@ def test_reset_rejects_overlapping_upload_request(client,monkeypatch):
         assert pending.result()[0]['state']=='required'
 
 
-@pytest.mark.parametrize('value',['0','-1','5','8','16','','auto','4.0','${DETECTOR_WORKERS}'])
+@pytest.mark.parametrize('value',['0','-1','17','32','','auto','4.0','${DETECTOR_WORKERS}'])
 def test_invalid_worker_configuration_warns_and_keeps_service_available(client,tmp_path,monkeypatch,caplog,value):
     monkeypatch.setenv('DETECTOR_WORKERS',value)
     app=create_app(tmp_path/'invalid-workers')
@@ -459,9 +459,16 @@ def test_invalid_worker_configuration_warns_and_keeps_service_available(client,t
     assert 'DETECTOR_WORKERS inválido' in caplog.text
 
 
-@pytest.mark.parametrize('value',['1','2','3','4',' 4 '])
+@pytest.mark.parametrize('value',['1','2','3','4','5','8','12','16',' 16 '])
 def test_valid_worker_configuration_is_preserved(client,tmp_path,monkeypatch,value):
     monkeypatch.setenv('DETECTOR_WORKERS',value)
     app=create_app(tmp_path/'valid-workers')
     assert app.config['DETECTOR_WORKERS']==int(value)
-    assert app.test_client().get('/healthz').status_code==200
+    assert app.test_client().get('/healthz').json['detector_workers']==int(value)
+
+
+def test_default_detector_workers_uses_twelve_when_not_overridden(client,tmp_path,monkeypatch):
+    monkeypatch.delenv('DETECTOR_WORKERS',raising=False)
+    app=create_app(tmp_path/'default-workers')
+    assert app.extensions['iptu']['scanner'].workers==12
+    assert app.test_client().get('/healthz').json['detector_workers']==12

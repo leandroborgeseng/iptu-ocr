@@ -54,11 +54,11 @@ def create_app(data_dir=None, page_reader=read_page, start_archive_queue=True):
     mutex = threading.Lock()
     cancel = threading.Event()
     try:
-        workers=int(os.environ.get('DETECTOR_WORKERS','3'))
-        if not 1<=workers<=4:raise ValueError()
+        workers=int(os.environ.get('DETECTOR_WORKERS','12'))
+        if not 1<=workers<=16:raise ValueError()
     except ValueError:
         workers=3
-        app.logger.warning('DETECTOR_WORKERS inválido: use um inteiro de 1 a 4. Usando 3 trabalhadores para manter o serviço disponível.')
+        app.logger.warning('DETECTOR_WORKERS inválido: use um inteiro de 1 a 16. Usando 3 trabalhadores para manter o serviço disponível.')
     app.config['DETECTOR_WORKERS']=workers
     scanner=PageScanner(workers)
     runtime = {'running': False, 'operation': '', 'current': '', 'done': 0, 'total': 0,
@@ -211,7 +211,7 @@ def create_app(data_dir=None, page_reader=read_page, start_archive_queue=True):
 
     @app.get('/healthz')
     def health():
-        return jsonify(ok=True,version='4.0')
+        return jsonify(ok=True,version='4.0',detector_workers=workers)
 
     @app.get('/')
     def index():
