@@ -5,7 +5,12 @@ import time
 from pathlib import Path
 import pytest
 import pymupdf as fitz
-from app import create_app
+from app import create_app as _create_app
+
+def create_app(*args,**kwargs):
+    kwargs.setdefault("start_archive_queue",False)
+    return _create_app(*args,**kwargs)
+
 from app.detector import classify, assemble
 
 FRONT = 'Prefeitura requerimento de isencao de IPTU 2027 nome cadastro do imovel'

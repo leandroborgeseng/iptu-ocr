@@ -25,9 +25,10 @@ from .detector import read_page, assemble, CLASSIFICATION_RULE
 from .extraction import extract_form, apply_review
 from .page_scanner import PageScanner
 from .form_selection import select_form,SELECTION_POLICY
+from .zip_queue import ArchiveQueue,ArchiveError
 
 
-def create_app(data_dir=None, page_reader=read_page):
+def create_app(data_dir=None, page_reader=read_page, start_archive_queue=True):
     secret = os.environ.get('APP_SECRET', '')
     password = os.environ.get('ADMIN_PASSWORD', '')
     if len(secret) < 32 or len(password) < 12:
@@ -145,6 +146,8 @@ def create_app(data_dir=None, page_reader=read_page):
     def protect():
         if request.method == 'POST' and request.path.startswith('/api/uploads/') and request.path.endswith('/files'):
             request.max_content_length = upload_limits['file_bytes'] + 65536
+        if request.method=='POST' and request.path.startswith('/api/archives/') and request.path.endswith('/chunks'):
+            request.max_content_length=ArchiveQueue.chunk_bytes
         if request.path == '/healthz':
             return None
         auth = request.authorization
@@ -171,7 +174,7 @@ def create_app(data_dir=None, page_reader=read_page):
 
     @app.before_request
     def protect_upload_reset_races():
-        if request.method=='POST' and (request.path.startswith('/api/uploads') or request.path=='/api/admin/reset-tests'):
+        if request.method=='POST' and (request.path.startswith(('/api/uploads','/api/archives')) or request.path=='/api/admin/reset-tests'):
             if not maintenance_lock.acquire(blocking=False):
                 return jsonify(error='Há um envio ou uma limpeza em andamento. Aguarde e tente novamente.'),409
             g.maintenance_locked=True
@@ -186,19 +189,20 @@ def create_app(data_dir=None, page_reader=read_page):
             return jsonify(error='Digite APAGAR TESTES para confirmar a exclusão definitiva dos dados de teste.'),400
         with mutex,upload_lock:
             if runtime['running']:return jsonify(error='Interrompa o processamento e aguarde sua conclusão antes da limpeza.'),409
-            directories=[root/name for name in ('uploads','results','cache')]
+            directories=[root/name for name in ('uploads','results','cache','archives')]
             if any(path.is_symlink() for path in directories):
                 return jsonify(error='Limpeza recusada: um diretório de dados é um link simbólico.'),409
             scanner.close()
             with db() as con:
-                counts={table:con.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] for table in ('processes','uploads','upload_files','pdf_cache')}
+                counts={table:con.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] for table in ('processes','uploads','upload_files','pdf_cache','archives')}
             # Fixed application-owned paths only; external source paths are never used.
             for directory in directories:
                 if directory.exists():shutil.rmtree(directory)
                 directory.mkdir(exist_ok=True)
             with db() as con:
-                for table in ('upload_processes','upload_plan','upload_files','pdf_cache','processes','uploads'):
+                for table in ('archive_members','archive_groups','archives','upload_processes','upload_plan','upload_files','pdf_cache','processes','uploads'):
                     con.execute(f'DELETE FROM {table}')
+                con.execute('UPDATE archive_control SET paused=0 WHERE id=1')
             cancel.clear()
             runtime.update(running=False,operation='',current='',done=0,total=0,error=False,error_code=None,
                            diagnostics=[],details={},cancelled=False,job_id=None,
@@ -207,7 +211,7 @@ def create_app(data_dir=None, page_reader=read_page):
 
     @app.get('/healthz')
     def health():
-        return jsonify(ok=True,version='3.0')
+        return jsonify(ok=True,version='4.0')
 
     @app.get('/')
     def index():
@@ -749,7 +753,8 @@ def create_app(data_dir=None, page_reader=read_page):
     def stop():
         requested=(request.get_json(silent=True) or {}).get('job_id')
         if requested and requested!=runtime.get('job_id'):return jsonify(error='A operação solicitada já terminou.'),409
-        cancel.set()
+        if runtime.get('operation')=='arquivo_zip':archives.control('pause')
+        else:cancel.set()
         return jsonify(ok=True)
 
     @app.post('/api/retry/<pid>')
@@ -827,5 +832,71 @@ def create_app(data_dir=None, page_reader=read_page):
             abort(404)
         return send_file(path, as_attachment=True, download_name=row['name'] + '-' + names[kind])
 
-    app.extensions['iptu'] = dict(db=db, runtime=runtime, root=root,scanner=scanner)
+    def prepare_archive_pdf(upload_id,item):
+        cached=document_cache.get(item['sha256'])
+        if cached is None:
+            source=LocalUploadSource(uploads_root,upload_id)
+            with tempfile.TemporaryDirectory(prefix='iptu-zip-prepare-') as temp:
+                work=Path(temp);original=work/'original.pdf';source.copy(item,original)
+                pages,timing=scanner.scan(original,work,page_reader,cancel,
+                    lambda done,total:runtime.update(current=f"{item['relative']} · {done}/{total} páginas · até {workers} trabalhadores"))
+                details=runtime.setdefault('details',{})
+                details['timings']=details.get('timings',[])[-9:]+[dict(arquivo=item['relative'],**timing)]
+                document_cache.store(item['sha256'],pages,original)
+        document_cache.purge_originals(item['sha256'])
+
+    def process_archive_group(upload_id,name,files,auto_data):
+        batch=upload_row(upload_id)
+        upload_index.register(batch,{name:files})
+        key=unicodedata.normalize('NFC',name).casefold()
+        with db() as con:
+            row=con.execute("SELECT * FROM processes WHERE active=1 AND source_kind='upload' AND process_key=?",(key,)).fetchone()
+        previous=json.loads(row['result']) if row['result'] else {}
+        if previous and previous.get('selection_policy')==SELECTION_POLICY and not previous.get('failures') and row['status'] not in ('pendente','processando','erro'):
+            if not auto_data or previous.get('data') or not previous.get('pdf'):return row['id'],None
+        result=previous or None
+        with db() as con:con.execute("UPDATE processes SET status='processando' WHERE id=?",(row['id'],))
+        try:
+            status,result=process_one(row,LocalUploadSource(uploads_root,upload_id))
+            if auto_data and result.get('pdf') and not result.get('data'):result=generate_data(row,result)
+        except InterruptedError:
+            with db() as con:con.execute("UPDATE processes SET status='pendente',result=?,updated=? WHERE id=?",(json.dumps(result),datetime.now(timezone.utc).isoformat(),row['id']))
+            raise
+        except Exception as exc:
+            message=safe_error(exc)
+            result={**(result or {}),'error':message,'ocr_status':'erro'};status='erro'
+        with db() as con:con.execute('UPDATE processes SET status=?,result=?,updated=? WHERE id=?',
+            (status,json.dumps(result),datetime.now(timezone.utc).isoformat(),row['id']))
+        error=result.get('error') if status=='erro' else 'Há PDFs com falha de preparação.' if result.get('failures') else None
+        return row['id'],error
+
+    archives=ArchiveQueue(root,db,mutex,runtime,cancel,document_cache,upload_limits,prepare_archive_pdf,process_archive_group,safe_error,app.logger)
+
+    @app.errorhandler(ArchiveError)
+    def archive_error(error):
+        return jsonify(error=str(error)),400
+
+    @app.get('/api/archives')
+    def archive_state():return jsonify(archives.state())
+
+    @app.post('/api/archives')
+    def archive_begin():return jsonify(archives.begin(request.get_json() or {})),201
+
+    @app.post('/api/archives/<identifier>/chunks')
+    def archive_chunk(identifier):
+        try:offset=int(request.args.get('offset','-1'))
+        except ValueError:raise ArchiveError('Posição de upload inválida.')
+        return jsonify(archives.receive(identifier,offset,request.stream,request.content_length))
+
+    @app.post('/api/archives/<identifier>/complete')
+    def archive_complete(identifier):return jsonify(archives.complete(identifier))
+
+    @app.post('/api/archives/control')
+    def archive_control():
+        data=request.get_json() or {}
+        archives.control(data.get('action'),data.get('id'))
+        return jsonify(ok=True)
+
+    app.extensions['iptu'] = dict(db=db, runtime=runtime, root=root,scanner=scanner,archives=archives)
+    if start_archive_queue:archives.start()
     return app

@@ -10,3 +10,4 @@ aside{background:linear-gradient(155deg,#0066cc 0%,#197bd5 100%)}.brand-sub{colo
 
 [hidden]{display:none!important}
 .workspace{grid-template-columns:1fr}.upload-panel{scroll-margin-top:20px}
+.archive-panel{scroll-margin-top:20px}.archive-panel td small{display:block;margin-bottom:8px}.archive-panel td button{margin:3px}.archive-panel .upload-picker{margin:16px 0}

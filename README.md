@@ -2,6 +2,28 @@
 
 Aplicação de upload, identificação de formulários de isenção de IPTU, OCR e extração de dados em JSON. Interface azul e branca em português. Os dados ficam no próprio servidor. Não há conexão direta com compartilhamentos Windows nem configuração de usuário/senha de rede.
 
+## Fila de ZIPs: enviar e deixar o servidor trabalhar
+
+No painel **Fila de ZIPs 24/7**, selecione vários arquivos `.zip` e clique em **Enviar ZIPs para a fila**. Cada pacote é conferido por SHA-256 e enviado em blocos de 8 MiB; o recebimento confirmado fica salvo no volume. A validação integral de conteúdo ocorre em segundo plano no servidor, sem manter uma requisição HTTP aberta durante a leitura de ZIPs grandes. O servidor já começa o primeiro pacote enquanto você envia os seguintes.
+
+Quando todos os ZIPs estiverem confirmados, você pode fechar o navegador e desligar o computador que fez o envio. A fila pertence ao servidor e continua automaticamente, um ZIP por vez, até terminar. Se a aplicação reiniciar, pacotes interrompidos voltam à fila e os grupos de processo já concluídos são preservados. É necessário manter o servidor/contêiner ligado, com o volume `/data` persistente e a fila sem pausa.
+
+- PDFs são encontrados recursivamente nas pastas do ZIP. Arquivos de outros tipos, metadados do macOS e ZIPs dentro de ZIPs são ignorados.
+- Preserve as pastas identificadoras dos processos dentro do ZIP. Para um ZIP com PDFs avulsos de um único processo, use o número SEI como nome do ZIP ou selecione a opção de uma pasta de processo por ZIP.
+- Cada PDF é descompactado, identificado e preparado antes do seguinte. Isso evita expandir todo o acervo original no disco de uma vez. O formulário de 2027 é montado quando todos os PDFs daquele processo estão disponíveis.
+- A opção de OCR/JSON automático vem marcada. Formulários sem exercício confirmado ou com associação ambígua continuam exigindo revisão.
+- O ZIP completo é reconhecido pelo conteúdo para evitar reenvio. PDFs idênticos dentro de ZIPs diferentes reaproveitam preparação e OCR. Revisões existentes são preservadas.
+- **Pausar fila** interrompe cooperativamente e salva o progresso; **Retomar fila** continua. A pausa é mantida após reinícios. **Interromper envio** para apenas a transferência do navegador; os pacotes já confirmados continuam no servidor.
+- Se o envio cair antes da confirmação, selecione os mesmos ZIPs novamente. Os bytes recebidos são reconhecidos e a transferência continua da posição salva.
+- Falhas em um processo não bloqueiam os demais processos/pacotes. O pacote fica com erro e pode usar **Tentar pendências**, sem repetir grupos já concluídos. **Descartar ZIP** remove apenas o pacote armazenado; resultados existentes ficam preservados.
+- Ao concluir sem falhas técnicas, o ZIP é removido do servidor. Formulários, OCRs, JSONs, histórico e comprovantes de conteúdo permanecem. ZIPs com falha são retidos para nova tentativa. Mantenha os originais na sua origem para auditoria.
+
+Os padrões são `ZIP_MAX_FILE_MB=65536` (64 GiB por ZIP) e `ZIP_MAX_STORED_MB=65536` (64 GiB reservados para pacotes ainda armazenados). A aplicação verifica espaço livre antes de admitir pacotes e blocos. Esses limites não reservam espaço para todos os resultados futuros: dimensione o volume para ZIPs pendentes **mais** formulários, OCRs, temporários e históricos.
+
+O limite descompactado continua sendo `UPLOAD_MAX_BATCH_MB` por ZIP, `UPLOAD_MAX_FILES` PDFs e `UPLOAD_MAX_FILE_MB` por PDF. ZIPs criptografados, caminhos perigosos, PDFs duplicados no mesmo caminho e compressão excessiva são recusados. O proxy precisa aceitar blocos de pouco mais de 8 MiB; não precisa aceitar o ZIP inteiro em uma única requisição. Arquivos grandes usam ZIP64, sem expandir automaticamente arquivos compactados dentro do pacote.
+
+A fila usa o mesmo trabalhador exclusivo das operações manuais. Para operar manualmente sem a fila consumir o próximo pacote, pause a fila primeiro. Use apenas uma instância do aplicativo por volume; não configure múltiplas réplicas.
+
 ## Operação com pastas grandes, incluindo acervos de 36 GB
 
 1. Clique em **Adicionar pasta inteira**. A seleção inclui recursivamente as subpastas. Repita para acrescentar outras pastas. Somente nomes terminados em `.pdf` ou `.PDF` entram na fila; os demais são ignorados antes da leitura e do envio.
@@ -12,7 +34,7 @@ Aplicação de upload, identificação de formulários de isenção de IPTU, OCR
 
 O limite padrão de uma seleção é **64 GiB**, até 20.000 PDFs, com **100 MiB por PDF**. Não é necessário enviar os 36 GB em uma única seleção: várias seleções menores usam o mesmo controle de conteúdo.
 
-O navegador deve permanecer aberto e o computador acordado durante a conferência e o envio. Se a aba fechar, a rede cair ou o contêiner reiniciar, selecione novamente as mesmas pastas e envie. Os comprovantes de recebimento e o trabalho concluído permanecem no volume. A conferência pode reler os arquivos no computador, mas os PDFs reconhecidos não precisam ser transmitidos novamente. Um trabalho já iniciado no servidor continua após fechar a aba; novos envios dependem dela.
+No envio direto de pastas (sem ZIP), o navegador deve permanecer aberto e o computador acordado durante a conferência, o envio e as rodadas coordenadas por ele. Para processamento independente do navegador, use a fila de ZIPs acima. Se a aba fechar, a rede cair ou o contêiner reiniciar, selecione novamente as mesmas pastas e envie. Os comprovantes de recebimento e o trabalho concluído permanecem no volume. A conferência pode reler os arquivos no computador, mas os PDFs reconhecidos não precisam ser transmitidos novamente. Um trabalho já iniciado no servidor continua após fechar a aba; novos envios dependem dela.
 
 ### Identidade e retomada
 
@@ -111,7 +133,7 @@ python -m pytest -q
 node --test tests/*.test.cjs
 ```
 
-Os testes cobrem upload recursivo lógico, rejeição de caminhos e conteúdos inválidos, autenticação/CSRF, retomada, reutilização por conteúdo, descarte seguro de cópias, preparação antes do término da seleção, extração/revisão e vetores SHA-256. O limite de 36 GiB é verificado por manifesto; os testes não transferem um acervo real desse tamanho.
+Os testes cobrem fila automática de ZIPs, retomada por bytes, recuperação de reinícios, pausa persistente, tratamento de falhas, duplicatas entre ZIPs e preservação de revisões, além de upload recursivo lógico, rejeição de caminhos e conteúdos inválidos, autenticação/CSRF, retomada, reutilização por conteúdo, descarte seguro de cópias, preparação antes do término da seleção, extração/revisão e vetores SHA-256. O limite de 36 GiB é verificado por manifesto; os testes não transferem um acervo real desse tamanho.
 
 ## Reiniciar os testes com os mesmos PDFs
 
